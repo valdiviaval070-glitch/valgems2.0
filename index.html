@@ -16,7 +16,10 @@ const blob=new Blob([JSON.stringify(manifestData)],{type:'application/json'});
 document.getElementById('manifest-placeholder').href=URL.createObjectURL(blob);
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 :root {
   --gold:#C9912A;--gold2:#E8C36A;--gold3:#F5DFA0;--gold-dim:rgba(201,145,42,0.15);
@@ -294,6 +297,21 @@ tr:hover .avatar{border-color:var(--gold);box-shadow:0 0 15px rgba(201,145,42,.3
 .quote-price{font-family:var(--fd);font-size:22px;color:var(--gold2);font-weight:300;}
 .quote-actions{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0;}
 
+/* NEW TOOLS: POS, INVENTORY, 3D, AI */
+.pos-layout{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
+.cart-panel{background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--r2);padding:24px;display:flex;flex-direction:column;height:calc(100vh - 140px);}
+.cart-items{flex:1;overflow-y:auto;margin:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 0;}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(201,145,42,.05);}
+.cart-total{font-family:var(--fd);font-size:36px;color:var(--gold2);text-align:right;}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;align-content:start;}
+.pos-item{background:var(--surface);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;transition:var(--tr);}
+.pos-item:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.ai-btn{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:6px 14px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:var(--tr);color:var(--text2);}
+.ai-btn:hover{border-color:#A970FF;color:#fff;box-shadow:0 0 15px rgba(169,112,255,.2);background:rgba(169,112,255,.1);}
+.ai-icon{background:linear-gradient(135deg, #A970FF, #C9912A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#viewer-3d{width:100%;height:220px;background:var(--bg4);border-radius:var(--r);margin-top:10px;display:none;position:relative;overflow:hidden;border:1px solid var(--border2);}
+#viewer-3d canvas{outline:none;}
+
 
 /* ── POLISH ADDITIONS ───────────────────────────────────────── */
 /* Sidebar scrollbar */
@@ -449,6 +467,15 @@ canvas{max-width:100%;}
     <div class="nav-item" onclick="showPage('sales',this)">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
       <span data-t="sales">Ventas</span>
+    </div>
+    <div class="nav-item" onclick="showPage('pos',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      <span>Caja (POS)</span>
+    </div>
+    <div class="nav-section">Taller</div>
+    <div class="nav-item" onclick="showPage('inventory',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Insumos</span>
     </div>
       <div class="nav-item" onclick="showPage('history',this)">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -690,6 +717,49 @@ canvas{max-width:100%;}
       </div>
     </div>
 
+    <!-- CAJA POS -->
+    <div class="page" id="page-pos">
+      <div class="pos-layout">
+        <div class="card" style="padding:24px;max-height:calc(100vh - 140px);overflow-y:auto;">
+          <h2 style="font-family:var(--fd);margin:0 0 20px;font-size:24px;color:var(--text);font-weight:300;">Catálogo Rápido</h2>
+          <div class="search-wrap mb16"><input type="text" id="pos-search" oninput="renderPosCatalog()" placeholder="Buscar pieza..."/></div>
+          <div class="pos-grid" id="pos-grid"></div>
+        </div>
+        <div class="cart-panel">
+          <h2 style="font-family:var(--fd);margin:0;font-size:24px;color:var(--text);font-weight:300;">Ticket #<span id="pos-ticket-id">001</span></h2>
+          <div style="margin-top:16px;">
+            <select id="pos-client" style="width:100%;padding:8px;border-radius:var(--r);background:var(--bg4);border:1px solid var(--border);color:var(--text);"><option value="">Cliente mostrador...</option></select>
+          </div>
+          <div class="cart-items" id="cart-items">
+            <div style="text-align:center;color:var(--text4);font-size:11px;margin-top:20px;">El carrito está vacío</div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text4);margin-bottom:6px;"><span>Subtotal</span><span id="pos-subtotal">$0.00</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:end;">
+              <span style="font-size:12px;color:var(--text2);">Total a pagar</span>
+              <span class="cart-total" id="pos-total">$0.00</span>
+            </div>
+          </div>
+          <button class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:14px;" onclick="processSale()">Cobrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTARIO INSUMOS -->
+    <div class="page" id="page-inventory">
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-lbl">Plata Fina 999</div><div class="metric-val" id="inv-ag">0g</div></div>
+        <div class="metric-card"><div class="metric-lbl">Oro Fino 24k</div><div class="metric-val" id="inv-au">0g</div></div>
+        <div class="metric-card"><div class="metric-lbl">Diamantes</div><div class="metric-val" id="inv-dia">0 ct</div></div>
+        <div class="metric-card"><div class="metric-lbl">Gemas</div><div class="metric-val" id="inv-gem">0</div></div>
+      </div>
+      <div class="card table-wrap">
+        <table><thead><tr><th>Insumo</th><th>Tipo</th><th>Cantidad</th><th>Valor Aprox.</th></tr></thead>
+        <tbody id="inventory-tbody"></tbody></table>
+      </div>
+      <button class="btn btn-gold mt16" onclick="openMaterialModal()">+ Registrar Ingreso</button>
+    </div>
+
   </div>
 </div>
 </div>
@@ -703,26 +773,24 @@ canvas{max-width:100%;}
     </div>
     <div class="modal-body">
       <div class="form-group mb16" style="grid-column:1/-1;">
-        <label>Fotografía de la pieza</label>
-        <div class="photo-upload-zone" id="photo-zone"
-          ondragover="event.preventDefault();this.classList.add('drag-over')"
-          ondragleave="this.classList.remove('drag-over')"
-          ondrop="handlePhotoDrop(event)">
-          <input type="file" id="photo-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;" onchange="handlePhoto(event)"/>
-          <img id="photo-preview-img" class="photo-preview-img" alt="preview" onclick="event.stopPropagation();viewPhoto(currentPhoto)"/>
-          <div class="photo-placeholder" id="photo-placeholder">
-            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="opacity:.35;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span style="font-size:13px;letter-spacing:.5px;margin-top:4px;">Arrastra una foto aquí</span>
-            <span style="font-size:10px;color:var(--text4);margin-top:2px;">o haz clic para seleccionar · JPG, PNG, WEBP</span>
+        <label>Fotografía o Modelo 3D (.STL)</label>
+        <div class="photo-upload" id="photo-drop" onclick="document.getElementById('photo-input').click()">
+          <input type="file" id="photo-input" accept="image/*,.stl" style="display:none;" onchange="handlePhotoUpload(event)">
+          <img id="photo-preview" class="photo-preview" style="display:none;">
+          <div id="viewer-3d"></div>
+          <div id="photo-placeholder">
+            <svg width="24" height="24" fill="none" stroke="var(--gold)" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span style="font-size:12px;color:var(--text3);margin-top:8px;">Arrastra un archivo aquí</span>
+            <span style="font-size:10px;color:var(--text4);margin-top:2px;">o haz clic para seleccionar · JPG, PNG, STL</span>
           </div>
-          <div class="photo-change-lnk" id="photo-change-lnk" onclick="event.stopPropagation();document.getElementById('photo-input').click()">📷 Cambiar foto</div>
+          <div class="photo-change-lnk" id="photo-change-lnk" onclick="event.stopPropagation();document.getElementById('photo-input').click()">📷 Cambiar archivo</div>
         </div>
-        <div id="photo-actions" style="display:none;margin-top:8px;display:none;">
-          <button class="btn btn-sm btn-danger" onclick="removePhoto()" style="font-size:10px;">✕ Quitar foto</button>
+        <div id="photo-actions" style="display:none;margin-top:8px;">
+          <button class="btn btn-sm btn-danger" onclick="removePhoto()" style="font-size:10px;">✕ Quitar archivo</button>
         </div>
       </div>
       <div class="form-grid">
-        <div class="form-group full"><label>Nombre</label><input id="p-name" type="text" placeholder="Ej. Anillo solitario"/></div>
+        <div class="form-group full"><label style="display:flex;justify-content:space-between;">Nombre <button class="ai-btn" type="button" onclick="aiGenerateDesc()"><span class="ai-icon">✨</span> IA Mágica</button></label><input id="p-name" type="text" placeholder="Ej. Anillo solitario"/></div>
         <div class="form-group"><label>Material</label>
           <select id="p-material"><option>Plata 925</option><option>Oro 14k</option><option>Oro 18k</option><option>Oro 24k</option><option>Resina</option><option>Mixto</option></select>
         </div>
@@ -1805,6 +1873,177 @@ window.checkPin=function(val){
   if(val===storedPin){sessionStorage.setItem('valgems_unlocked','1');}
   _origCheckPin(val);
 };
+// ── INVENTORY LOGIC ───────────────────────────────────────────────────
+if(!db.materials) db.materials = { ag999: 0, au24: 0, dia_ct: 0, gem_count: 0, records: [] };
+function renderInventory() {
+  document.getElementById('inv-ag').textContent = db.materials.ag999 + 'g';
+  document.getElementById('inv-au').textContent = db.materials.au24 + 'g';
+  document.getElementById('inv-dia').textContent = db.materials.dia_ct + ' ct';
+  document.getElementById('inv-gem').textContent = db.materials.gem_count;
+  const tbody = document.getElementById('inventory-tbody');
+  tbody.innerHTML = db.materials.records.map((r,i) => `<tr>
+    <td><div style="font-weight:500;">${r.name}</div><div style="font-size:10px;color:var(--text4);">${new Date(r.date).toLocaleDateString()}</div></td>
+    <td>${r.type}</td>
+    <td>${r.qty}</td>
+    <td><span style="color:var(--gold2)">${fmt(r.val)}</span></td>
+  </tr>`).join('');
+}
+window.openMaterialModal = function() {
+  const t = prompt("Tipo de ingreso (Plata, Oro, Diamante, Gema):", "Plata Fina");
+  if(!t) return;
+  const q = parseFloat(prompt("Cantidad (gramos o ct):", "10"));
+  if(!q) return;
+  const v = parseFloat(prompt("Costo de este ingreso ($):", "150"));
+  if(t.toLowerCase().includes('plata')) db.materials.ag999 += q;
+  if(t.toLowerCase().includes('oro')) db.materials.au24 += q;
+  if(t.toLowerCase().includes('diamante')) db.materials.dia_ct += q;
+  if(t.toLowerCase().includes('gema')) db.materials.gem_count += q;
+  db.materials.records.unshift({id:Date.now(), name: t, type: 'Ingreso', qty: q, val: v||0, date: new Date().toISOString()});
+  saveData();
+  renderInventory();
+  toast('Ingreso registrado');
+}
+
+// ── POS LOGIC ─────────────────────────────────────────────────────────
+let cart = [];
+window.renderPosCatalog = function() {
+  const q = document.getElementById('pos-search').value.toLowerCase();
+  const grid = document.getElementById('pos-grid');
+  grid.innerHTML = db.pieces.filter(p => p.name.toLowerCase().includes(q)).map(p => `<div class="pos-item" onclick="addToCart(${p.id})">
+    <div style="font-size:32px;margin-bottom:8px;">${p.emoji||'💎'}</div>
+    <div style="font-size:11px;color:var(--text2);">${p.name}</div>
+    <div style="color:var(--gold2);font-weight:500;margin-top:4px;">${fmt(p.price)}</div>
+  </div>`).join('');
+}
+window.addToCart = function(id) {
+  const p = db.pieces.find(x => x.id === id);
+  const ex = cart.find(x => x.id === id);
+  if(ex) ex.qty++; else cart.push({...p, qty: 1});
+  renderCart();
+}
+window.renderCart = function() {
+  const panel = document.getElementById('cart-items');
+  if(!cart.length) { panel.innerHTML = '<div style="text-align:center;color:var(--text4);font-size:11px;margin-top:20px;">El carrito está vacío</div>'; document.getElementById('pos-total').textContent = '$0.00'; document.getElementById('pos-subtotal').textContent = '$0.00'; return; }
+  panel.innerHTML = cart.map((c,i) => `<div class="cart-item">
+    <div><div style="font-size:12px;color:var(--text);">${c.name}</div><div style="font-size:10px;color:var(--text4);">${c.qty}x ${fmt(c.price)}</div></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="color:var(--gold2);font-weight:500;">${fmt(c.price*c.qty)}</span>
+      <button class="btn btn-sm btn-danger" onclick="cart.splice(${i},1);renderCart()" style="padding:4px 8px;">✕</button>
+    </div>
+  </div>`).join('');
+  const total = cart.reduce((a,c) => a + c.price*c.qty, 0);
+  document.getElementById('pos-subtotal').textContent = fmt(total);
+  document.getElementById('pos-total').textContent = fmt(total);
+}
+window.processSale = function() {
+  if(!cart.length) return alert('Carrito vacío');
+  const total = cart.reduce((a,c) => a + c.price*c.qty, 0);
+  const cliSelect = document.getElementById('pos-client');
+  const cliId = cliSelect.value;
+  const cliName = cliId ? db.clients.find(c=>c.id==cliId).name : 'Mostrador';
+  db.sales.push({id:Date.now(), piece: cart.map(c=>c.qty+'x '+c.name).join(', '), clientId: cliId||Date.now(), clientName: cliName, amount: total, date: new Date().toISOString(), status: 'paid'});
+  db.activity.unshift({date:new Date().toISOString(), text:`Venta en POS: ${fmt(total)}`});
+  cart = []; renderCart(); renderSales(); saveData();
+  document.getElementById('pos-ticket-id').textContent = String(db.sales.length+1).padStart(3,'0');
+  toast('Venta procesada con éxito');
+}
+
+// ── 3D VIEWER LOGIC ───────────────────────────────────────────────────
+let renderer, scene, camera, mesh, controls, animId;
+function init3DViewer() {
+  const container = document.getElementById('viewer-3d');
+  if(renderer) return;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x221F1B);
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 100);
+  camera.position.set(0, 50, 50);
+  renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.autoRotate = true;
+  const light = new THREE.HemisphereLight(0xffeedd, 0x111122, 1);
+  scene.add(light);
+  const dLight = new THREE.DirectionalLight(0xffeedd, 0.8);
+  dLight.position.set(0, 1, 1);
+  scene.add(dLight);
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    if(controls) controls.update();
+    if(renderer && scene && camera) renderer.render(scene, camera);
+  }
+  animate();
+}
+window.handlePhotoUpload = function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('photo-placeholder').style.display='none';
+  document.getElementById('photo-actions').style.display='block';
+  document.getElementById('photo-change-lnk').style.display='inline-block';
+  
+  if(file.name.toLowerCase().endsWith('.stl')) {
+    document.getElementById('photo-preview').style.display='none';
+    document.getElementById('viewer-3d').style.display='block';
+    init3DViewer();
+    if(mesh) scene.remove(mesh);
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const loader = new THREE.STLLoader();
+      const geometry = loader.parse(evt.target.result);
+      const material = new THREE.MeshPhysicalMaterial({ color: 0xF5DFA0, metalness: 0.9, roughness: 0.3, clearcoat: 1.0 });
+      mesh = new THREE.Mesh(geometry, material);
+      geometry.computeBoundingBox();
+      const center = geometry.boundingBox.getCenter(new THREE.Vector3());
+      mesh.position.sub(center);
+      const size = geometry.boundingBox.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      camera.position.set(0, maxDim*1.5, maxDim*1.5);
+      scene.add(mesh);
+      currentPhoto = 'stl';
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    document.getElementById('viewer-3d').style.display='none';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('photo-preview').src = ev.target.result;
+      document.getElementById('photo-preview').style.display='block';
+      currentPhoto = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+window.removePhoto = function() {
+  currentPhoto = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('viewer-3d').style.display = 'none';
+  document.getElementById('photo-placeholder').style.display = 'flex';
+  document.getElementById('photo-actions').style.display = 'none';
+  document.getElementById('photo-change-lnk').style.display = 'none';
+}
+
+// ── AI MOCK ───────────────────────────────────────────────────────────
+window.aiGenerateDesc = function() {
+  const name = document.getElementById('p-name').value;
+  if(!name) return alert('Por favor, escribe primero el nombre de la pieza.');
+  const mat = document.getElementById('p-material').value;
+  const w = document.getElementById('p-peso').value || '5';
+  document.getElementById('p-notes').value = `Pieza exclusiva de alta joyería. "${name}", forjada cuidadosamente en ${mat} con un peso aproximado de ${w}g. Diseño ergonómico de autor con acabado pulido espejo. Ideal para regalos inolvidables o compromisos especiales.`;
+  toast('✨ Descripción generada con IA');
+}
+
+// Patch renderAll
+const _oldRenderAll = renderAll;
+renderAll = function() {
+  _oldRenderAll();
+  renderInventory();
+  renderPosCatalog();
+  const cSel = document.getElementById('pos-client');
+  if(cSel) cSel.innerHTML = '<option value="">Cliente mostrador...</option>' + db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+};
+
 </script>
 </body>
 </html>
