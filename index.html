@@ -802,9 +802,11 @@ canvas{max-width:100%;}
         <div class="form-group full"><label>Descripción</label><textarea id="p-notes" placeholder="Detalles, tallas, acabado..."></textarea></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('modal-piece')" data-t="cancel">Cancelar</button>
-      <button class="btn btn-gold" onclick="savePiece()" data-t="save">Guardar pieza</button>
+    <div class="modal-footer" id="modal-piece-footer">
+      <button class="btn btn-whatsapp" id="btn-client-wa" style="display:none;width:100%;justify-content:center;padding:12px;">Consultar por WhatsApp</button>
+      <button class="btn" id="btn-piece-cancel" onclick="closeModal('modal-piece')" data-t="cancel">Cancelar</button>
+      <button class="btn" id="btn-piece-cert" onclick="generateCertificate(editingId)" style="display:none;color:var(--gold2);border-color:var(--border);">📜 Certificado</button>
+      <button class="btn btn-gold" id="btn-piece-save" onclick="savePiece()" data-t="save">Guardar pieza</button>
     </div>
   </div>
 </div>
@@ -846,7 +848,7 @@ canvas{max-width:100%;}
         <div class="form-group"><label>Abono ($)</label><input id="s-paid" type="number" min="0" step="0.01" placeholder="0.00"/></div>
         <div class="form-group"><label>Fecha</label><input id="s-date" type="date"/></div>
         <div class="form-group"><label>Estado</label>
-          <select id="s-status"><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="abono">Abono parcial</option></select>
+          <select id="s-status"><option value="pagado">Pagado / Listo</option><option value="pendiente">Pendiente</option><option value="abono">Abono parcial</option><option value="taller">En Taller</option></select>
         </div>
         <div class="form-group full"><label>Notas</label><textarea id="s-notes" placeholder="Detalles del pedido..."></textarea></div>
       </div>
@@ -967,6 +969,14 @@ canvas{max-width:100%;}
     <div class="lock-hint" id="lock-hint">PIN predeterminado: 1234</div>
     <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:20px;" onclick="checkPin(document.getElementById('lock-input').value)">Entrar (Admin)</button>
     <button class="btn" style="width:100%;justify-content:center;margin-top:10px;border-color:var(--border2);color:var(--gold2);" onclick="enterClientMode()">Entrar como Cliente (Catálogo)</button>
+    <div style="margin-top:40px;text-align:center;width:100%;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">¿Dejaste una joya en el taller?</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="track-id" placeholder="N° de Ticket (Ej. 177892...)" style="flex:1;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:var(--r);font-size:12px;">
+        <button class="btn btn-gold" onclick="trackOrder()">Rastrear</button>
+      </div>
+      <div id="track-result" style="margin-top:15px;font-size:13px;text-align:left;"></div>
+    </div>
   </div>
 </div>
 
@@ -1301,6 +1311,27 @@ function openPieceModal(id){
     ['p-name','p-peso','p-price','p-notes'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('p-stock').value=1;document.getElementById('p-emoji').value='💍';
   }
+  
+  const isClient = sessionStorage.getItem('valgems_client_mode')==='1';
+  if(isClient) {
+    document.getElementById('btn-client-wa').style.display='flex';
+    document.getElementById('btn-piece-cancel').style.display='none';
+    document.getElementById('btn-piece-cert').style.display='none';
+    document.getElementById('btn-piece-save').style.display='none';
+    ['p-name','p-material','p-peso','p-price','p-stock','p-emoji','p-notes'].forEach(i => { document.getElementById(i).readOnly = true; document.getElementById(i).disabled = true; });
+    document.getElementById('btn-client-wa').onclick = () => {
+      const nm = document.getElementById('p-name').value || '';
+      const pr = document.getElementById('p-price').value || '';
+      window.open('https://wa.me/?text='+encodeURIComponent(`Hola ValGems 💎, me interesa la pieza: ${nm} (${fmt(pr)}). ¿Está disponible?`), '_blank');
+    };
+  } else {
+    document.getElementById('btn-client-wa').style.display='none';
+    document.getElementById('btn-piece-cancel').style.display='flex';
+    document.getElementById('btn-piece-save').style.display='flex';
+    document.getElementById('btn-piece-cert').style.display=id?'flex':'none';
+    ['p-name','p-material','p-peso','p-price','p-stock','p-emoji','p-notes'].forEach(i => { document.getElementById(i).readOnly = false; document.getElementById(i).disabled = false; });
+  }
+  
   document.getElementById('modal-piece').classList.add('open');
 }
 function editPiece(id){openPieceModal(id);}
@@ -1370,10 +1401,10 @@ function renderSales(){
   const tbody=document.getElementById('sales-tbody');
   if(!sales.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">${t('no_data')}</td></tr>`;return;}
   tbody.innerHTML=sales.slice().reverse().map(s=>{
-    const sc=s.status==='pagado'?'badge-success':s.status==='abono'?'badge-warn':'badge-danger';
-    const st=s.status==='pagado'?t('paid'):s.status==='abono'?t('partial'):t('pending');
+    const sc=s.status==='pagado'?'badge-success':s.status==='abono'?'badge-warn':s.status==='taller'?'badge-warn':'badge-danger';
+    const st=s.status==='pagado'?t('paid'):s.status==='abono'?t('partial'):s.status==='taller'?'Taller':t('pending');
     const bal=s.amount-s.paid;
-    return`<tr><td style="color:var(--text)">${s.pieceName}</td><td>${s.clientName}</td>
+    return`<tr><td style="color:var(--text)"><div style="font-size:10px;color:var(--text4)">#${s.id}</div>${s.pieceName}</td><td>${s.clientName}</td>
       <td><div class="text-gold">${fmt(s.amount)}</div>${bal>0?`<div style="font-size:10px;color:var(--danger)">Debe: ${fmt(bal)}</div>`:''}</td>
       <td style="color:var(--text4)">${fmtDate(s.date)}</td>
       <td><span class="badge ${sc}">${st}</span></td>
@@ -2128,6 +2159,70 @@ renderAll = function() {
   if(cSel) cSel.innerHTML = '<option value="">Cliente mostrador...</option>' + db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 };
 renderAll();
+
+window.trackOrder = function() {
+  const id = document.getElementById('track-id').value.trim();
+  if(!id) return;
+  const sale = db.sales.find(s => String(s.id) === id || (s.clientName && s.clientName.toLowerCase().includes(id.toLowerCase())));
+  const res = document.getElementById('track-result');
+  if(!sale) { res.innerHTML = '<span style="color:var(--danger)">No encontramos un pedido con ese N° de Ticket.</span>'; return; }
+  
+  let step = 1;
+  if(sale.status==='pendiente' || sale.status==='abono') step = 1;
+  if(sale.status==='taller') step = 2;
+  if(sale.status==='pagado') step = 3;
+  
+  res.innerHTML = `
+    <div style="background:var(--bg4);padding:15px;border-radius:var(--r);border:1px solid var(--border);">
+      <div style="color:var(--gold2);font-weight:500;margin-bottom:5px;">Pedido: ${sale.pieceName}</div>
+      <div style="color:var(--text4);font-size:11px;margin-bottom:15px;">A nombre de: ${sale.clientName} · Ticket #${sale.id}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;position:relative;">
+        <div style="position:absolute;top:10px;left:0;right:0;height:2px;background:var(--border);z-index:1;"></div>
+        <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:20px;height:20px;border-radius:50%;background:${step>=1?'var(--gold)':'var(--bg)'};border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;">${step>1?'✓':'1'}</div>
+          <div style="font-size:9px;color:${step>=1?'var(--gold)':'var(--text4)'}">Recibido</div>
+        </div>
+        <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:20px;height:20px;border-radius:50%;background:${step>=2?'var(--gold)':'var(--bg)'};border:2px solid ${step>=2?'var(--gold)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;">${step>2?'✓':'2'}</div>
+          <div style="font-size:9px;color:${step>=2?'var(--gold)':'var(--text4)'}">En Taller</div>
+        </div>
+        <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:20px;height:20px;border-radius:50%;background:${step>=3?'var(--success)':'var(--bg)'};border:2px solid ${step>=3?'var(--success)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;">3</div>
+          <div style="font-size:9px;color:${step>=3?'var(--success)':'var(--text4)'}">Listo</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.generateCertificate = function(id) {
+  const p = db.pieces.find(x=>x.id===id);
+  if(!p) return;
+  const printArea = document.getElementById('quote-print-area');
+  printArea.innerHTML = `
+    <div style="padding:40px; text-align:center; border: 8px solid var(--gold2); margin:20px; font-family:'Playfair Display',serif; background:#fff;">
+      <h1 style="color:var(--gold);font-size:36px;margin-bottom:10px;font-weight:600;">ValGems</h1>
+      <div style="letter-spacing:4px;font-size:12px;text-transform:uppercase;margin-bottom:30px;color:#111;">Certificado de Autenticidad</div>
+      ${p.photo && !p.photo.endsWith('.stl') ? `<img src="${p.photo}" style="max-width:200px;max-height:200px;border-radius:10px;margin-bottom:20px;box-shadow:0 10px 20px rgba(0,0,0,0.1);">` : `<div style="font-size:60px;margin-bottom:20px;">${p.emoji||'💎'}</div>`}
+      <h2 style="font-size:24px;margin-bottom:15px;color:#000;">${p.name}</h2>
+      <p style="font-size:14px;color:#555;margin-bottom:30px;line-height:1.6;padding:0 20px;">Certificamos que esta pieza ha sido elaborada artesanalmente cumpliendo los más altos estándares de calidad, diseño y pureza de materiales.</p>
+      <div style="display:flex;justify-content:space-around;gap:20px;margin-bottom:40px;font-size:13px;color:#333;">
+        <div style="text-align:left;">
+          <div style="margin-bottom:8px;"><strong>Material:</strong> ${p.material}</div>
+          <div><strong>Peso:</strong> ${p.peso}g</div>
+        </div>
+        <div style="text-align:left;">
+          <div style="margin-bottom:8px;"><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</div>
+          <div><strong>Ref:</strong> #${p.id}</div>
+        </div>
+      </div>
+      <div style="margin-top:40px;border-top:1px solid #ccc;width:200px;margin:0 auto;padding-top:10px;font-size:12px;color:#555;">
+        Firma Autorizada
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-quote-preview').classList.add('open');
+};
 
 // ── SUPABASE SYNC ─────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://rdrtqaeduqqzjwayuxav.supabase.co';
