@@ -1430,10 +1430,12 @@ function saveClient(){
   if(editingId){db.clients=db.clients.map(c=>c.id===editingId?client:c);}
   else{db.clients.push(client);db.activity.push({text_es:`Nuevo cliente: ${name}`,text_en:`New client: ${name}`,type:'green',time:today()});}
   saveData();closeModal('modal-client');renderClients();showToast(t('saved'));
+  if(window.supabase) window.supabase.from('clients').upsert(client).then(()=>console.log('Cliente Nube OK'));
 }
 function deleteClient(id){
   if(!confirm(lang==='es'?'¿Eliminar cliente?':'Delete client?'))return;
   db.clients=db.clients.filter(c=>c.id!==id);saveData();renderClients();showToast(t('deleted'));
+  if(window.supabase) window.supabase.from('clients').delete().eq('id', id).then(()=>console.log('Cliente Nube OK'));
 }
 
 // ── SALES ─────────────────────────────────────────────────────────────
@@ -1478,16 +1480,19 @@ function saveSale(){
   db.sales.push(sale);
   db.activity.push({text_es:`Venta: ${piece.name} a ${client.name}`,text_en:`Sale: ${piece.name} to ${client.name}`,type:'gold',time:today()});
   saveData();closeModal('modal-sale');renderSales();showToast(t('saved'));
+  if(window.supabase) window.supabase.from('sales').upsert(sale).then(()=>console.log('Venta Nube OK'));
 }
 function markPaid(id){
   db.sales=db.sales.map(s=>s.id===id?{...s,paid:s.amount,status:'pagado'}:s);
   const s=db.sales.find(x=>x.id===id);
   db.activity.push({text_es:`Pago: ${s.clientName} ${fmt(s.amount)}`,text_en:`Payment: ${s.clientName} ${fmt(s.amount)}`,type:'green',time:today()});
   saveData();renderSales();showToast(t('mark_paid_ok'));
+  if(window.supabase) window.supabase.from('sales').upsert(s).then(()=>console.log('Pago Nube OK'));
 }
 function deleteSale(id){
   if(!confirm(lang==='es'?'¿Eliminar venta?':'Delete sale?'))return;
   db.sales=db.sales.filter(s=>s.id!==id);saveData();renderSales();showToast(t('deleted'));
+  if(window.supabase) window.supabase.from('sales').delete().eq('id', id).then(()=>console.log('Venta Borrada Nube OK'));
 }
 
 // ── MODALS ────────────────────────────────────────────────────────────
@@ -2087,11 +2092,13 @@ window.processSale = function() {
   const cliId = cliSelect.value;
   const cliName = cliId ? db.clients.find(c=>c.id==cliId).name : 'Mostrador';
   const newId = ++db.nextId;
-  db.sales.push({id: newId, pieceName: cart.map(c=>c.qty+'x '+c.name).join(', '), clientId: cliId||null, clientName: cliName, amount: total, paid: total, date: new Date().toISOString().split('T')[0], status: 'pagado'});
+  const sale = {id: newId, pieceName: cart.map(c=>c.qty+'x '+c.name).join(', '), clientId: cliId||null, clientName: cliName, amount: total, paid: total, date: new Date().toISOString().split('T')[0], status: 'pagado'};
+  db.sales.push(sale);
   db.activity.unshift({time:new Date().toISOString(), text_es:`Venta en POS: ${fmt(total)}`, text_en:`POS Sale: ${fmt(total)}`, type:'gold'});
   cart = []; renderCart(); renderSales(); saveData();
   document.getElementById('pos-ticket-id').textContent = String(newId).padStart(3,'0');
   toast('Venta procesada con éxito. Ticket: #' + newId);
+  if(window.supabase) window.supabase.from('sales').upsert(sale).then(()=>console.log('POS Venta Nube OK'));
 }
 
 // ── 3D VIEWER LOGIC ───────────────────────────────────────────────────
@@ -2276,24 +2283,45 @@ async function syncCatalogToCloud() {
   if(!db.pieces) return;
   const isPushed = localStorage.getItem('valgems_supabase_pushed_v2');
   if(!isPushed && db.pieces.length > 0) {
-    toast('Sincronizando con la nube... ☁️');
-    for(const p of db.pieces) {
-      await window.supabase.from('catalog').upsert({
-        id: p.id, name: p.name, material: p.material, peso: p.peso, price: p.price, stock: p.stock, emoji: p.emoji, notes: p.notes, photo: p.photo
-      });
-    }
+    toast('Sincronizando catálogo... ☁️');
+    for(const p of db.pieces) await window.supabase.from('catalog').upsert(p);
     localStorage.setItem('valgems_supabase_pushed_v2', '1');
-    toast('¡Catálogo en vivo! 🌍');
   }
-  
-  const { data: finalPieces, error } = await window.supabase.from('catalog').select('*').order('id', {ascending: false});
-  if(finalPieces) {
-    db.pieces = finalPieces;
-    renderCatalog();
-    if(window.renderPosCatalog) renderPosCatalog();
-  }
+  const { data } = await window.supabase.from('catalog').select('*').order('id', {ascending: false});
+  if(data) { db.pieces = data; renderCatalog(); if(window.renderPosCatalog) renderPosCatalog(); }
 }
-syncCatalogToCloud();
+
+async function syncClientsToCloud() {
+  if(!db.clients) return;
+  const isPushed = localStorage.getItem('valgems_clients_pushed_v2');
+  if(!isPushed && db.clients.length > 0) {
+    toast('Sincronizando clientes... ☁️');
+    for(const c of db.clients) await window.supabase.from('clients').upsert(c);
+    localStorage.setItem('valgems_clients_pushed_v2', '1');
+  }
+  const { data } = await window.supabase.from('clients').select('*').order('id', {ascending: true});
+  if(data) { db.clients = data; renderClients(); }
+}
+
+async function syncSalesToCloud() {
+  if(!db.sales) return;
+  const isPushed = localStorage.getItem('valgems_sales_pushed_v2');
+  if(!isPushed && db.sales.length > 0) {
+    toast('Sincronizando ventas... ☁️');
+    for(const s of db.sales) await window.supabase.from('sales').upsert(s);
+    localStorage.setItem('valgems_sales_pushed_v2', '1');
+  }
+  const { data } = await window.supabase.from('sales').select('*').order('id', {ascending: false});
+  if(data) { db.sales = data; renderSales(); renderDashboard(); }
+}
+
+async function fullSync() {
+  await syncCatalogToCloud();
+  await syncClientsToCloud();
+  await syncSalesToCloud();
+  toast('ValGems en la nube ☁️');
+}
+fullSync();
 
 </script>
 </body>
