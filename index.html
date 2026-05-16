@@ -1265,12 +1265,23 @@ async function fetchLivePrices(){
     <div style="margin-top:6px;">${t('fetching')}</div></div>`;
   btn.disabled=true;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'Search for the current real-time spot prices of Gold (XAU/USD) and Silver (XAG/USD). Return ONLY valid JSON no markdown: {"silver_oz":NUM,"gold_oz":NUM,"silver_g":NUM,"gold_g":NUM,"gold_14k_g":NUM,"gold_18k_g":NUM,"gold_24k_g":NUM,"silver_925_g":NUM,"source":"NAME","date":"YYYY-MM-DD"} where silver_g=silver_oz/31.1035, gold_g=gold_oz/31.1035, gold_14k_g=gold_g*0.585, gold_18k_g=gold_g*0.75, gold_24k_g=gold_g, silver_925_g=silver_g*0.925'}]})});
+    const resp=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+    if(!resp.ok) throw new Error('Error al conectar con la API');
     const data=await resp.json();
-    const text=data.content.map(b=>b.type==='text'?b.text:'').join('');
-    const match=text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
-    if(!match)throw new Error('No JSON');
-    const prices=JSON.parse(match[0]);
+    const gold_oz = 1 / data.usd.xau;
+    const silver_oz = 1 / data.usd.xag;
+    const gold_g = gold_oz / 31.1035;
+    const silver_g = silver_oz / 31.1035;
+    const prices={
+      silver_oz: silver_oz,
+      gold_oz: gold_oz,
+      silver_925_g: silver_g * 0.925,
+      gold_14k_g: gold_g * 0.585,
+      gold_18k_g: gold_g * 0.75,
+      gold_24k_g: gold_g,
+      source: 'currency-api',
+      date: data.date
+    };
     const prev={...db.prices};
     db.prices.plata925=parseFloat(prices.silver_925_g.toFixed(4));
     db.prices.oro14=parseFloat(prices.gold_14k_g.toFixed(4));
