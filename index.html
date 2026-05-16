@@ -2073,7 +2073,7 @@ window.aiGenerateDesc = function() {
 // Patch renderAll
 const _oldRenderAll = renderAll;
 renderAll = function() {
-  if(!localStorage.getItem('valgems_stls_seeded')){
+  if(!localStorage.getItem('valgems_stls_seeded_v2')){
     const stls = [
       {name: 'Collar de Araña', material: 'Plata 925', peso: 4.5, price: 120, stock: 1, notes: 'Modelo 3D importado.', photo: 'models/spider.stl', emoji:'🕷️'},
       {name: 'Solitario Esmeralda', material: 'Oro 18k', peso: 3.2, price: 450, stock: 2, notes: 'Modelo 3D importado.', photo: 'models/emerald_solitaire.stl', emoji:'💍'},
@@ -2083,7 +2083,7 @@ renderAll = function() {
     ];
     stls.forEach((s, i) => db.pieces.unshift({...s, id: Date.now() - i, date: new Date().toISOString()}));
     saveData();
-    localStorage.setItem('valgems_stls_seeded', '1');
+    localStorage.setItem('valgems_stls_seeded_v2', '1');
   }
   _oldRenderAll();
   renderInventory();
@@ -2091,6 +2091,7 @@ renderAll = function() {
   const cSel = document.getElementById('pos-client');
   if(cSel) cSel.innerHTML = '<option value="">Cliente mostrador...</option>' + db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 };
+renderAll();
 
 </script>
 </body>
