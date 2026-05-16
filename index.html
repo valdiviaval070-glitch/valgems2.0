@@ -22,7 +22,7 @@ document.getElementById('manifest-placeholder').href=URL.createObjectURL(blob);
   --gold:#C9912A;--gold2:#E8C36A;--gold3:#F5DFA0;--gold-dim:rgba(201,145,42,0.15);
   --bg:#0D0C0A;--bg2:#131210;--bg3:#1A1815;--bg4:#221F1B;--surface:#1E1C18;--surface2:#252219;
   --border:rgba(201,145,42,0.12);--border2:rgba(201,145,42,0.25);--border3:rgba(201,145,42,0.4);
-  --text:#F0EBE0;--text2:#C8BFA8;--text3:#8A8070;--text4:#524E44;
+  --text:#F0EBE0;--text2:#C8BFA8;--text3:#8A8070;--text4:#6A6459;
   --danger:#E05252;--success:#5BA87A;--warn:#D4924A;
   --r:8px;--r2:14px;--r3:20px;--fd:'Playfair Display',serif;--fb:'Jost',sans-serif;
   --tr:all 0.22s cubic-bezier(.4,0,.2,1);
@@ -86,7 +86,7 @@ body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100
 .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
 .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:24px;position:relative;overflow:hidden;transition:var(--tr);}
 .metric-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
-.metric-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.metric-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 0 1px rgba(201,145,42,.15),0 4px 24px rgba(201,145,42,.08);}
 .metric-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);margin-bottom:10px;}
 .metric-val{font-family:var(--fd);font-size:32px;font-weight:300;color:var(--text);line-height:1;}
 .metric-sub{font-size:10px;color:var(--text4);margin-top:8px;}
@@ -190,9 +190,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .pieces-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:16px;}
 .piece-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:var(--tr);position:relative;}
 .piece-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 20%,var(--gold) 50%,transparent 80%);opacity:0;transition:opacity .22s;z-index:1;}
-.piece-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 48px rgba(0,0,0,.5);}
+.piece-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 48px rgba(0,0,0,.5),0 0 0 1px rgba(201,145,42,.2),0 0 24px rgba(201,145,42,.1);}
 .piece-card:hover::before{opacity:.7;}
-.piece-photo-wrap{width:100%;height:165px;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;}
+.piece-photo-wrap{width:100%;height:180px;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;}
 .piece-photo-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease;}
 .piece-card:hover .piece-photo-wrap img{transform:scale(1.05);}
 .piece-body{padding:16px;}
@@ -215,7 +215,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,145,42,.2),rgba(201,145,42,.05));border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--gold2);flex-shrink:0;}
 
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 32px 100px rgba(0,0,0,.7);}
@@ -237,7 +237,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .search-wrap:focus-within{border-color:var(--border3);background:var(--bg4);}
 .search-wrap input{background:none;border:none;font-size:12px;color:var(--text);flex:1;padding:0;outline:none;letter-spacing:.3px;}
 .search-wrap input::placeholder{color:var(--text4);}
-.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);color:var(--text);padding:14px 22px;border-radius:var(--r);font-size:12px;z-index:999;display:none;border:1px solid var(--border2);border-left:3px solid var(--gold);box-shadow:0 12px 48px rgba(0,0,0,.6);letter-spacing:.3px;}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);color:var(--text);padding:14px 22px 18px;border-radius:var(--r);font-size:13px;z-index:999;display:none;border:1px solid var(--border2);border-left:3px solid var(--gold);box-shadow:0 12px 48px rgba(0,0,0,.6);letter-spacing:.3px;overflow:hidden;}
+.toast::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0;}
+.toast.show::after{animation:toastBar 2.5s linear forwards;}
+@keyframes toastBar{from{width:100%;}to{width:0%;}}
 .toast.show{display:flex;align-items:center;gap:8px;animation:slideIn .22s ease;}
 @keyframes slideIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
 .dash-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
@@ -275,6 +278,32 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .quote-actions{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0;}
 
 
+/* ── POLISH ADDITIONS ───────────────────────────────────────── */
+/* Sidebar scrollbar */
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-track{background:transparent;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:rgba(201,145,42,0.25);border-radius:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb:hover{background:rgba(201,145,42,0.5);}
+/* Logo gem shimmer */
+@keyframes gemGlow{0%,100%{opacity:.04;}55%{opacity:.11;}}
+.sidebar-logo::after{animation:gemGlow 5s ease-in-out infinite;}
+/* Nav active glow */
+.nav-item.active{box-shadow:inset 2px 0 10px rgba(201,145,42,.12);}
+/* Chip press */
+.chip:active{transform:scale(.92);}
+/* Modal scale-in */
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-overlay.open .modal{animation:modalIn .24s cubic-bezier(.4,0,.2,1);}
+/* Lock gem pulse */
+@keyframes gemPulse{0%,100%{filter:drop-shadow(0 0 0px rgba(201,145,42,0));}55%{filter:drop-shadow(0 0 22px rgba(201,145,42,.75));}}
+.lock-gem{animation:gemPulse 3s ease-in-out infinite;font-size:44px;}
+/* PIN success flash */
+@keyframes pinOk{0%{background:var(--bg3);}50%{background:rgba(91,168,122,.18);border-color:var(--success);}100%{background:var(--bg4);}}
+.lock-input.success{animation:pinOk .5s ease;}
+/* Quote card hover lift */
+.quote-card:hover{transform:translateY(-2px);}
+/* Page fadeUp tweak */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @media(max-width:900px){
   .sidebar{width:64px;}
   .sidebar-logo .logo-name,.sidebar-logo .logo-tagline,.sidebar-logo .logo-gem,.sidebar-prices,.lang-bar,.nav-section{display:none;}
@@ -366,11 +395,11 @@ canvas{max-width:100%;}
     </div>
     <div class="nav-item" onclick="showPage('quotes',this)">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      <span>Cotizaciones</span>
+      <span data-t="quotes_nav">Cotizaciones</span>
     </div>
     <div class="nav-item" onclick="showPage('reports',this)">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span>Reportes</span>
+      <span data-t="reports_nav">Reportes</span>
     </div>
     <div class="nav-section">Clientes</div>
     <div class="nav-item" onclick="showPage('clients',this)">
@@ -383,7 +412,7 @@ canvas{max-width:100%;}
     </div>
       <div class="nav-item" onclick="showPage('history',this)">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span>Historial</span>
+      <span data-t="history_nav">Historial</span>
     </div>
   </nav>
   <div class="sidebar-prices">
@@ -868,7 +897,7 @@ let db=loadData();
 
 // ── TRANSLATIONS ──────────────────────────────────────────────────────
 const T={
-  es:{dashboard:'Inicio',quote:'Cotizar',catalog:'Catálogo',clients:'Clientes',sales:'Ventas',
+  es:{dashboard:'Inicio',quote:'Cotizar',catalog:'Catálogo',clients:'Clientes',sales:'Ventas',quotes_nav:'Cotizaciones',reports_nav:'Reportes',history_nav:'Historial',
     prices_today:'Precios hoy',recent_activity:'Actividad reciente',debtors:'Saldo pendiente',
     metal_calc:'Calculadora',metal:'Metal',weight_g:'Peso (g)',labor:'Mano de obra ($)',
     save_quote:'Guardar cotización',summary:'Resumen',metal_cost:'Costo del metal',
@@ -885,7 +914,7 @@ const T={
     saved:'Guardado',deleted:'Eliminado',mark_paid_ok:'Marcado como pagado',
     search_pieces:'Buscar pieza...',search_client:'Buscar cliente...',search_sale:'Buscar venta...',
   },
-  en:{dashboard:'Dashboard',quote:'Quote',catalog:'Catalog',clients:'Clients',sales:'Sales',
+  en:{dashboard:'Dashboard',quote:'Quote',catalog:'Catalog',clients:'Clients',sales:'Sales',quotes_nav:'Quotes',reports_nav:'Reports',history_nav:'History',
     prices_today:"Today's prices",recent_activity:'Recent activity',debtors:'Balance due',
     metal_calc:'Calculator',metal:'Metal',weight_g:'Weight (g)',labor:'Labor ($)',
     save_quote:'Save quote',summary:'Summary',metal_cost:'Metal cost',
@@ -1510,8 +1539,13 @@ function removePhoto(){
 function checkPin(val){
   const storedPin=localStorage.getItem('valgems_pin')||'1234';
   if(val===storedPin){
-    document.getElementById('lock-screen').style.display='none';
-    document.getElementById('lock-hint').textContent='';
+    const inp=document.getElementById('lock-input');
+    inp.classList.add('success');
+    setTimeout(()=>{
+      document.getElementById('lock-screen').style.display='none';
+      document.getElementById('lock-hint').textContent='';
+      inp.classList.remove('success');
+    },500);
   } else if(val.length>=4){
     document.getElementById('lock-error').textContent='PIN incorrecto';
     setTimeout(()=>{document.getElementById('lock-error').textContent='';document.getElementById('lock-input').value='';},1200);
@@ -1566,7 +1600,7 @@ function renderReports(){
   const clientTotals=db.clients.map(c=>({...c,total:db.sales.filter(s=>s.clientId===c.id).reduce((a,s)=>a+s.amount,0),count:db.sales.filter(s=>s.clientId===c.id).length})).sort((a,b)=>b.total-a.total).slice(0,5);
   document.getElementById('rep-top-clients').innerHTML=clientTotals.length?clientTotals.map((c,i)=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="font-family:var(--fd);font-size:18px;color:var(--gold);width:24px;text-align:center;">${i+1}</div>
+      <div style="font-family:var(--fd);font-size:18px;color:var(--gold);width:24px;text-align:center;">${i===0?'👑':i+1}</div>
       <div class="avatar">${initials(c.name)}</div>
       <div style="flex:1;"><div style="font-size:13px;color:var(--text);">${c.name}</div><div style="font-size:10px;color:var(--text4);">${c.count} compras</div></div>
       <div style="font-family:var(--fd);font-size:16px;color:var(--gold2);">${fmt(c.total)}</div>
