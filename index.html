@@ -20,6 +20,7 @@ document.getElementById('manifest-placeholder').href=URL.createObjectURL(blob);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --gold:#C9912A;--gold2:#E8C36A;--gold3:#F5DFA0;--gold-dim:rgba(201,145,42,0.15);
@@ -1316,10 +1317,12 @@ function savePiece(){
   if(editingId){db.pieces=db.pieces.map(p=>p.id===editingId?piece:p);}
   else{db.pieces.push(piece);db.activity.push({text_es:`Nueva pieza: ${name}`,text_en:`New piece: ${name}`,type:'gray',time:today()});}
   saveData();closeModal('modal-piece');renderCatalog();showToast(t('saved'));
+  if(window.supabase) window.supabase.from('catalog').upsert(piece).then(()=>console.log('Nube OK'));
 }
 function deletePiece(id){
   if(!confirm(lang==='es'?'¿Eliminar esta pieza?':'Delete this piece?'))return;
   db.pieces=db.pieces.filter(p=>p.id!==id);saveData();renderCatalog();showToast(t('deleted'));
+  if(window.supabase) window.supabase.from('catalog').delete().eq('id', id).then(()=>console.log('Nube OK'));
 }
 
 // ── CLIENTS ───────────────────────────────────────────────────────────
@@ -2125,6 +2128,34 @@ renderAll = function() {
   if(cSel) cSel.innerHTML = '<option value="">Cliente mostrador...</option>' + db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 };
 renderAll();
+
+// ── SUPABASE SYNC ─────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://rdrtqaeduqqzjwayuxav.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zbZXE--XvI9bNCg0_yVvMg__rvrd-X_';
+window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function syncCatalogToCloud() {
+  if(!db.pieces) return;
+  const isPushed = localStorage.getItem('valgems_supabase_pushed_v2');
+  if(!isPushed && db.pieces.length > 0) {
+    toast('Sincronizando con la nube... ☁️');
+    for(const p of db.pieces) {
+      await window.supabase.from('catalog').upsert({
+        id: p.id, name: p.name, material: p.material, peso: p.peso, price: p.price, stock: p.stock, emoji: p.emoji, notes: p.notes, photo: p.photo
+      });
+    }
+    localStorage.setItem('valgems_supabase_pushed_v2', '1');
+    toast('¡Catálogo en vivo! 🌍');
+  }
+  
+  const { data: finalPieces, error } = await window.supabase.from('catalog').select('*').order('id', {ascending: false});
+  if(finalPieces) {
+    db.pieces = finalPieces;
+    renderCatalog();
+    if(window.renderPosCatalog) renderPosCatalog();
+  }
+}
+syncCatalogToCloud();
 
 </script>
 </body>
