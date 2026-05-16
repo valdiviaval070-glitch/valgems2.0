@@ -1212,7 +1212,7 @@ function renderCatalog(){
     cont.innerHTML=`<div class="pieces-grid">${pieces.map(p=>`
       <div class="piece-card">
         <div class="piece-photo-wrap" onclick="${p.photo?`viewPhoto('${p.photo.replace(/'/g,"\\'")}')`:''}" style="${p.photo?'cursor:pointer':''}">
-          ${p.photo?`<img src="${p.photo}" alt="${p.name}"/>`:p.emoji||'💍'}
+          ${p.photo ? (p.photo.endsWith('.stl') || p.photo==='stl' ? `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:var(--bg4);color:var(--gold);flex-direction:column;"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span style="font-size:10px;margin-top:8px;">Modelo 3D</span></div>` : `<img src="${p.photo}" alt="${p.name}"/>`) : p.emoji||'💍'}
         </div>
         <div class="piece-body">
           <div class="piece-name-c">${p.name}</div>
@@ -1229,7 +1229,7 @@ function renderCatalog(){
     cont.innerHTML=`<div class="card table-wrap"><table><thead><tr><th>Pieza</th><th>Material</th><th>Peso</th><th>Precio</th><th>Stock</th><th></th></tr></thead><tbody>${pieces.map(p=>`
       <tr><td><div class="flex-gap">
         <div style="width:44px;height:44px;border-radius:var(--r);overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;${p.photo?'cursor:pointer':''}" onclick="${p.photo?`viewPhoto('${p.photo.replace(/'/g,"\\'")}')`:''} ">
-          ${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;" alt=""/>`:p.emoji||'💍'}
+          ${p.photo ? (p.photo.endsWith('.stl') || p.photo==='stl' ? `<svg width="20" height="20" fill="none" stroke="var(--gold)" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/></svg>` : `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;" alt=""/>`) : p.emoji||'💍'}
         </div>
         <div><div style="color:var(--text)">${p.name}</div><div style="font-size:10px;color:var(--text4)">${p.notes||''}</div></div></div></td>
         <td>${p.material}</td><td>${p.peso?p.peso+'g':'—'}</td>
@@ -1243,11 +1243,17 @@ function renderCatalog(){
 }
 function viewPhoto(photo){
   if(!photo)return;
+  if(photo.endsWith('.stl') || photo==='stl'){
+     const p = db.pieces.find(x=>x.photo===photo);
+     if(p) openPieceModal(p.id);
+     return;
+  }
   document.getElementById('modal-photo-img').src=photo;
   document.getElementById('modal-photo').classList.add('open');
 }
 function openPieceModal(id){
-  editingId=id||null;resetPhoto();
+  editingId=id||null;
+  if(window.removePhoto) window.removePhoto(); else { currentPhoto=null; document.getElementById('photo-input').value=''; }
   document.getElementById('modal-piece-title').textContent=id?t('edit')+' pieza':t('new_piece');
   if(id){
     const p=db.pieces.find(x=>x.id===id);
@@ -1258,7 +1264,37 @@ function openPieceModal(id){
     document.getElementById('p-stock').value=p.stock;
     document.getElementById('p-emoji').value=p.emoji||'💍';
     document.getElementById('p-notes').value=p.notes||'';
-    if(p.photo){currentPhoto=p.photo;const img=document.getElementById('photo-preview-img');img.src=p.photo;img.classList.add('visible');document.getElementById('photo-placeholder').classList.add('hidden');document.getElementById('photo-change-lnk').style.display='block';document.getElementById('photo-zone').classList.add('has-photo');}
+    if(p.photo){
+       currentPhoto=p.photo;
+       document.getElementById('photo-placeholder').style.display='none';
+       document.getElementById('photo-actions').style.display='block';
+       document.getElementById('photo-change-lnk').style.display='inline-block';
+       if(p.photo.endsWith('.stl') || p.photo==='stl'){
+         document.getElementById('photo-preview').style.display='none';
+         document.getElementById('viewer-3d').style.display='block';
+         if(window.init3DViewer) init3DViewer();
+         if(window.mesh && window.scene) window.scene.remove(window.mesh);
+         if(p.photo.endsWith('.stl')) {
+           fetch(p.photo).then(r=>r.arrayBuffer()).then(buf=>{
+             const loader = new THREE.STLLoader();
+             const geometry = loader.parse(buf);
+             const material = new THREE.MeshPhysicalMaterial({ color: 0xF5DFA0, metalness: 0.9, roughness: 0.3, clearcoat: 1.0 });
+             window.mesh = new THREE.Mesh(geometry, material);
+             geometry.computeBoundingBox();
+             window.mesh.position.sub(geometry.boundingBox.getCenter(new THREE.Vector3()));
+             const size = geometry.boundingBox.getSize(new THREE.Vector3());
+             const maxDim = Math.max(size.x, size.y, size.z);
+             if(window.camera) window.camera.position.set(0, maxDim*1.5, maxDim*1.5);
+             if(window.scene) window.scene.add(window.mesh);
+           }).catch(e=>console.error('Error STL',e));
+         }
+       } else {
+         const img = document.getElementById('photo-preview');
+         img.src = p.photo;
+         img.style.display = 'block';
+         document.getElementById('viewer-3d').style.display = 'none';
+       }
+    }
   } else {
     ['p-name','p-peso','p-price','p-notes'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('p-stock').value=1;document.getElementById('p-emoji').value='💍';
@@ -2037,6 +2073,18 @@ window.aiGenerateDesc = function() {
 // Patch renderAll
 const _oldRenderAll = renderAll;
 renderAll = function() {
+  if(!localStorage.getItem('valgems_stls_seeded')){
+    const stls = [
+      {name: 'Collar de Araña', material: 'Plata 925', peso: 4.5, price: 120, stock: 1, notes: 'Modelo 3D importado.', photo: 'models/spider.stl', emoji:'🕷️'},
+      {name: 'Solitario Esmeralda', material: 'Oro 18k', peso: 3.2, price: 450, stock: 2, notes: 'Modelo 3D importado.', photo: 'models/emerald_solitaire.stl', emoji:'💍'},
+      {name: 'Anillo Principal', material: 'Oro 14k', peso: 5.1, price: 280, stock: 1, notes: 'Modelo 3D importado.', photo: 'models/ring_main.stl', emoji:'👑'},
+      {name: 'Anillo RR-002', material: 'Plata 925', peso: 6.8, price: 95, stock: 3, notes: 'Modelo 3D importado.', photo: 'models/ring_rr002.stl', emoji:'💍'},
+      {name: 'Dije Clásico', material: 'Oro 24k', peso: 2.5, price: 320, stock: 1, notes: 'Modelo 3D importado.', photo: 'models/pendant.stl', emoji:'✨'}
+    ];
+    stls.forEach((s, i) => db.pieces.unshift({...s, id: Date.now() - i, date: new Date().toISOString()}));
+    saveData();
+    localStorage.setItem('valgems_stls_seeded', '1');
+  }
   _oldRenderAll();
   renderInventory();
   renderPosCatalog();
