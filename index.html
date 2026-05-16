@@ -964,7 +964,8 @@ canvas{max-width:100%;}
     <input class="lock-input" id="lock-input" type="password" maxlength="6" placeholder="• • • • • •" oninput="checkPin(this.value)" autocomplete="off"/>
     <div class="lock-error" id="lock-error"></div>
     <div class="lock-hint" id="lock-hint">PIN predeterminado: 1234</div>
-    <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:20px;" onclick="checkPin(document.getElementById('lock-input').value)">Entrar</button>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:20px;" onclick="checkPin(document.getElementById('lock-input').value)">Entrar (Admin)</button>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:10px;border-color:var(--border2);color:var(--gold2);" onclick="enterClientMode()">Entrar como Cliente (Catálogo)</button>
   </div>
 </div>
 
@@ -1909,6 +1910,38 @@ window.checkPin=function(val){
   if(val===storedPin){sessionStorage.setItem('valgems_unlocked','1');}
   _origCheckPin(val);
 };
+
+// Client Mode
+window.enterClientMode = function() {
+  sessionStorage.setItem('valgems_client_mode', '1');
+  document.getElementById('lock-screen').style.display='none';
+  document.querySelectorAll('.sidebar .nav-item').forEach(el => {
+    if(!el.textContent.includes('Catálogo')) el.style.display = 'none';
+  });
+  document.querySelectorAll('.sidebar .nav-section').forEach(el => el.style.display = 'none');
+  const sp = document.querySelector('.sidebar-prices'); if(sp) sp.style.display = 'none';
+  document.body.classList.add('client-mode');
+  
+  if(!document.getElementById('client-mode-css')){
+    const style = document.createElement('style');
+    style.id = 'client-mode-css';
+    style.innerHTML = `
+      .client-mode .piece-actions-c { display: none !important; }
+      .client-mode .topbar-right { display: none !important; }
+      .client-mode .table-wrap th:last-child, .client-mode .table-wrap td:last-child { display: none !important; }
+      .client-mode .piece-card { cursor: default; }
+      .client-mode .piece-photo-wrap { cursor: pointer; }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  const catBtn = Array.from(document.querySelectorAll('.nav-item')).find(x=>x.textContent.includes('Catálogo'));
+  if(catBtn) showPage('catalog', catBtn);
+}
+if(sessionStorage.getItem('valgems_client_mode')==='1'){
+  setTimeout(() => window.enterClientMode(), 100);
+}
+
 // ── INVENTORY LOGIC ───────────────────────────────────────────────────
 if(!db.materials) db.materials = { ag999: 0, au24: 0, dia_ct: 0, gem_count: 0, records: [] };
 function renderInventory() {
