@@ -929,13 +929,13 @@ canvas{max-width:100%;}
       <div class="form-grid">
         <div class="form-group full"><label>Nombre de la pieza / descripción</label><input id="q-piece" type="text" placeholder="Ej. Anillo solitario Oro 18k"/></div>
         <div class="form-group"><label>Material</label>
-          <select id="q-material"><option>Plata 925</option><option>Oro 14k</option><option>Oro 18k</option><option>Oro 24k</option><option>Resina</option><option>Mixto</option></select>
+          <select id="q-material" onchange="autoCalcQuote()"><option>Plata 925</option><option>Oro 14k</option><option>Oro 18k</option><option>Oro 24k</option><option>Resina</option><option>Mixto</option></select>
         </div>
         <div class="form-group"><label>Peso (g)</label><input id="q-peso" type="number" min="0" step="0.01" placeholder="0.00" oninput="autoCalcQuote()"/></div>
         <div class="form-group full"><label>Cliente</label>
           <select id="q-client"><option value="">— Seleccionar cliente —</option></select>
         </div>
-        <div class="form-group"><label>Precio de venta ($)</label><input id="q-price" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Precio de venta ($) <span id="q-suggested-hint" style="font-size:9px;color:var(--gold2);cursor:pointer;margin-left:5px;font-weight:600;text-decoration:underline;"></span></label><input id="q-price" type="number" min="0" step="0.01" placeholder="0.00"/></div>
         <div class="form-group"><label>Validez (días)</label><input id="q-validity" type="number" min="1" value="7" placeholder="7"/></div>
         <div class="form-group"><label>Fecha</label><input id="q-date" type="date"/></div>
         <div class="form-group"><label>Estado</label>
@@ -1613,12 +1613,20 @@ function loadPiecePhoto(){
 }
 function autoCalcQuote(){
   const peso=parseFloat(document.getElementById('q-peso').value)||0;
-  if(peso>0&&!document.getElementById('q-price').value){
-    const mat=document.getElementById('q-material').value;
-    const key=mat.includes('Plata')?'plata925':mat.includes('14k')?'oro14':mat.includes('18k')?'oro18':mat.includes('24k')?'oro24':'resina';
-    const ppg=db.prices[key]||0;
-    const base=peso*ppg+15;
-    document.getElementById('q-price').value=(base+base*0.6).toFixed(2);
+  const mat=document.getElementById('q-material').value;
+  const key=mat.includes('Plata')?'plata925':mat.includes('14k')?'oro14':mat.includes('18k')?'oro18':mat.includes('24k')?'oro24':'resina';
+  const ppg=db.prices[key]||0;
+  const labor=parseFloat(document.getElementById('c-mano')?.value)||15;
+  const margin=(parseInt(document.getElementById('c-margen')?.value)||60)/100;
+  const base=peso*ppg+labor;
+  const suggested=(base+base*margin).toFixed(2);
+  const hint=document.getElementById('q-suggested-hint');
+  if(peso>0){
+    hint.textContent=`(Usar sugerido: $${suggested})`;
+    hint.onclick=()=>{document.getElementById('q-price').value=suggested;hint.textContent='(Aplicado ✓)';};
+    if(!document.getElementById('q-price').value) document.getElementById('q-price').value=suggested;
+  } else {
+    hint.textContent='';
   }
 }
 function openQuoteModal(){
