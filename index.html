@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ValGems</title>
+<title>ValGems | Gestión de Alta Orfebrería</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
 <meta name="theme-color" content="#0D0C0A"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
@@ -2044,11 +2045,12 @@ window.processSale = function() {
   const cliSelect = document.getElementById('pos-client');
   const cliId = cliSelect.value;
   const cliName = cliId ? db.clients.find(c=>c.id==cliId).name : 'Mostrador';
-  db.sales.push({id:Date.now(), piece: cart.map(c=>c.qty+'x '+c.name).join(', '), clientId: cliId||Date.now(), clientName: cliName, amount: total, date: new Date().toISOString(), status: 'paid'});
-  db.activity.unshift({date:new Date().toISOString(), text:`Venta en POS: ${fmt(total)}`});
+  const newId = ++db.nextId;
+  db.sales.push({id: newId, pieceName: cart.map(c=>c.qty+'x '+c.name).join(', '), clientId: cliId||null, clientName: cliName, amount: total, paid: total, date: new Date().toISOString().split('T')[0], status: 'pagado'});
+  db.activity.unshift({time:new Date().toISOString(), text_es:`Venta en POS: ${fmt(total)}`, text_en:`POS Sale: ${fmt(total)}`, type:'gold'});
   cart = []; renderCart(); renderSales(); saveData();
-  document.getElementById('pos-ticket-id').textContent = String(db.sales.length+1).padStart(3,'0');
-  toast('Venta procesada con éxito');
+  document.getElementById('pos-ticket-id').textContent = String(newId).padStart(3,'0');
+  toast('Venta procesada con éxito. Ticket: #' + newId);
 }
 
 // ── 3D VIEWER LOGIC ───────────────────────────────────────────────────
