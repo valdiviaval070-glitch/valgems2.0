@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ValGems</title>
+<meta name="theme-color" content="#0D0C0A"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-title" content="ValGems"/>
+<link rel="manifest" id="manifest-placeholder"/>
+<script>
+// Inline manifest
+const manifestData={name:"ValGems",short_name:"ValGems",start_url:".",display:"standalone",background_color:"#0D0C0A",theme_color:"#C9912A",description:"Gestión de joyería y orfebrería",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230D0C0A'/><text y='.9em' font-size='80' x='10'>💎</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+const blob=new Blob([JSON.stringify(manifestData)],{type:'application/json'});
+document.getElementById('manifest-placeholder').href=URL.createObjectURL(blob);
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold:#C9912A;--gold2:#E8C36A;--gold3:#F5DFA0;--gold-dim:rgba(201,145,42,0.15);
+  --bg:#0D0C0A;--bg2:#131210;--bg3:#1A1815;--bg4:#221F1B;--surface:#1E1C18;--surface2:#252219;
+  --border:rgba(201,145,42,0.12);--border2:rgba(201,145,42,0.25);--border3:rgba(201,145,42,0.4);
+  --text:#F0EBE0;--text2:#C8BFA8;--text3:#8A8070;--text4:#524E44;
+  --danger:#E05252;--success:#5BA87A;--warn:#D4924A;
+  --r:8px;--r2:14px;--r3:20px;--fd:'Playfair Display',serif;--fb:'Jost',sans-serif;
+  --tr:all 0.22s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:230px;background:var(--bg2);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;border-right:1px solid var(--border);}
+.main{margin-left:230px;flex:1;min-height:100vh;background:var(--bg);}
+.main::before{content:'';position:fixed;top:0;left:230px;right:0;bottom:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(201,145,42,0.012) 60px,rgba(201,145,42,0.012) 61px);pointer-events:none;z-index:0;}
+
+/* SIDEBAR */
+.sidebar-logo{padding:32px 24px 24px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.sidebar-logo::after{content:'◆';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:70px;color:var(--gold);opacity:.04;pointer-events:none;}
+.logo-gem{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:300;margin-bottom:6px;}
+.logo-name{font-family:var(--fd);font-size:30px;font-weight:300;color:var(--text);letter-spacing:3px;line-height:1;}
+.logo-tagline{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);margin-top:6px;}
+.sidebar-nav{flex:1;padding:20px 0;overflow-y:auto;}
+.nav-section{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);padding:0 24px;margin:18px 0 8px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 24px;font-size:12px;letter-spacing:.5px;font-weight:300;color:var(--text3);cursor:pointer;transition:var(--tr);border-left:2px solid transparent;position:relative;}
+.nav-item::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--gold-dim),transparent);opacity:0;transition:opacity .22s;}
+.nav-item:hover{color:var(--text2);}
+.nav-item:hover::before{opacity:.5;}
+.nav-item.active{color:var(--gold2);border-left-color:var(--gold);}
+.nav-item.active::before{opacity:1;}
+.nav-item svg{flex-shrink:0;opacity:.6;}
+.nav-item.active svg{opacity:1;}
+.sidebar-prices{padding:16px 20px;border-top:1px solid var(--border);background:var(--bg3);}
+.price-title{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);margin-bottom:12px;}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;color:var(--text3);}
+.price-val{color:var(--gold2);font-size:11px;}
+.price-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.5;margin-right:6px;display:inline-block;}
+.lang-bar{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:6px;}
+.lang-btn{font-size:10px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;letter-spacing:1.5px;font-family:var(--fb);transition:var(--tr);}
+.lang-btn:hover{border-color:var(--border3);color:var(--text2);}
+.lang-btn.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border-color:transparent;font-weight:500;}
+
+/* TOPBAR */
+.topbar{background:rgba(13,12,10,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 36px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--fd);font-size:20px;font-weight:300;color:var(--text);letter-spacing:2px;display:flex;align-items:center;gap:12px;}
+.page-title::before{content:'';width:20px;height:1px;background:linear-gradient(90deg,transparent,var(--gold));}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--r);font-size:11px;font-weight:400;letter-spacing:1px;cursor:pointer;transition:var(--tr);border:1px solid var(--border2);background:none;color:var(--text2);font-family:var(--fb);text-transform:uppercase;}
+.btn:hover{border-color:var(--border3);color:var(--text);background:var(--surface);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#B8831E);color:var(--bg);border-color:transparent;font-weight:500;box-shadow:0 4px 16px rgba(201,145,42,0.25);}
+.btn-gold:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));box-shadow:0 6px 24px rgba(201,145,42,0.4);}
+.btn-sm{padding:5px 12px;font-size:10px;}
+.btn-danger{color:var(--danger);border-color:rgba(224,82,82,.2);}
+.btn-danger:hover{background:rgba(224,82,82,.08);}
+
+/* CONTENT */
+.content{padding:32px 36px;position:relative;z-index:1;}
+.page{display:none;}
+.page.active{display:block;animation:fadeUp .28s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* METRICS */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:24px;position:relative;overflow:hidden;transition:var(--tr);}
+.metric-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
+.metric-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.metric-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);margin-bottom:10px;}
+.metric-val{font-family:var(--fd);font-size:32px;font-weight:300;color:var(--text);line-height:1;}
+.metric-sub{font-size:10px;color:var(--text4);margin-top:8px;}
+.metric-sub.up{color:var(--success);}
+.metric-sub.down{color:var(--danger);}
+.metric-accent{position:absolute;bottom:-12px;right:-6px;font-size:56px;opacity:.04;line-height:1;pointer-events:none;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 10%,var(--gold) 50%,transparent 90%);opacity:.25;pointer-events:none;}
+.card-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);font-weight:400;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text4);font-weight:400;padding:14px 20px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:14px 20px;font-size:12px;color:var(--text2);border-bottom:1px solid rgba(201,145,42,.05);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(201,145,42,.04);color:var(--text);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:9px;padding:3px 10px;border-radius:20px;font-weight:400;letter-spacing:1px;text-transform:uppercase;}
+.badge-success{background:rgba(91,168,122,.12);color:var(--success);border:1px solid rgba(91,168,122,.2);}
+.badge-danger{background:rgba(224,82,82,.1);color:var(--danger);border:1px solid rgba(224,82,82,.2);}
+.badge-warn{background:rgba(212,146,74,.12);color:var(--warn);border:1px solid rgba(212,146,74,.2);}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:7px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text4);font-weight:400;}
+input,select,textarea{font-family:var(--fb);font-size:13px;color:var(--text);background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px;outline:none;transition:var(--tr);}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(--bg4);box-shadow:0 0 0 3px rgba(201,145,42,.1);}
+input::placeholder{color:var(--text4);}
+textarea{resize:vertical;min-height:80px;}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23524E44' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+/* CALC */
+.calc-layout{display:grid;grid-template-columns:1fr 1.1fr;gap:24px;}
+.calc-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:28px;position:relative;}
+.calc-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 10%,var(--gold) 50%,transparent 90%);opacity:.35;}
+.calc-title{font-family:var(--fd);font-size:22px;font-weight:300;color:var(--text);margin-bottom:24px;letter-spacing:1px;font-style:italic;}
+.range-row{display:flex;align-items:center;gap:12px;}
+.range-row input[type=range]{flex:1;-webkit-appearance:none;height:2px;background:var(--bg4);border-radius:2px;border:none;padding:0;}
+.range-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));cursor:pointer;box-shadow:0 2px 8px rgba(201,145,42,.4);}
+.range-val{font-size:13px;font-weight:400;color:var(--gold2);min-width:44px;text-align:right;}
+.result-panel{background:linear-gradient(145deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:var(--r2);padding:24px;position:relative;overflow:hidden;}
+.result-panel::after{content:'◈';position:absolute;bottom:-20px;right:-10px;font-size:100px;color:var(--gold);opacity:.04;line-height:1;}
+.result-item{display:flex;justify-content:space-between;padding:9px 0;font-size:12px;border-bottom:1px solid rgba(201,145,42,.07);}
+.result-item .rl{color:var(--text4);font-weight:300;}
+.result-item .rv{color:var(--text2);font-weight:400;}
+.result-total{display:flex;justify-content:space-between;padding:16px 0 4px;margin-top:8px;border-top:1px solid rgba(201,145,42,.2);}
+.result-total .rl{font-family:var(--fd);font-size:16px;color:var(--text3);font-style:italic;}
+.result-total .rv{font-family:var(--fd);font-size:28px;color:var(--gold2);font-weight:300;}
+
+/* METAL TABS */
+.metal-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px;}
+.metal-tab{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 4px;font-size:16px;cursor:pointer;text-align:center;transition:var(--tr);line-height:1.5;width:100%;font-family:var(--fb);color:var(--text3);}
+.metal-tab span{font-size:9px;color:var(--text4);display:block;letter-spacing:.5px;margin-top:2px;}
+.metal-tab:hover{border-color:var(--border2);background:var(--bg4);}
+.metal-tab.active{background:linear-gradient(145deg,rgba(201,145,42,.22),rgba(201,145,42,.08));border-color:var(--gold);color:var(--text);}
+.metal-tab.active span{color:var(--gold2);}
+
+/* CHIPS */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.chip{background:var(--bg4);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:10px;cursor:pointer;color:var(--text3);font-family:var(--fb);letter-spacing:.5px;transition:var(--tr);}
+.chip:hover{background:var(--gold);color:var(--bg);border-color:var(--gold);}
+
+/* HERO PRICE */
+.price-hero{background:linear-gradient(135deg,var(--bg2),var(--bg3) 60%,rgba(201,145,42,.06));border:1px solid var(--border2);border-radius:var(--r2);padding:30px 36px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;overflow:hidden;}
+.price-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.price-hero::after{content:'◆';position:absolute;right:20px;bottom:-30px;font-size:130px;color:var(--gold);opacity:.025;}
+.hero-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text4);margin-bottom:8px;}
+.hero-price{font-family:var(--fd);font-size:60px;font-weight:300;color:var(--gold2);line-height:1;letter-spacing:-1px;}
+.hero-sub{font-size:11px;color:var(--text4);margin-top:10px;letter-spacing:.3px;}
+.hero-meta{display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+.hero-tag{display:flex;gap:8px;align-items:center;}
+.hero-tag-lbl{font-size:10px;color:var(--text4);letter-spacing:.5px;}
+.hero-tag-val{font-size:12px;color:var(--text2);}
+.hero-tag-val.gold{color:var(--gold2);}
+
+/* WEIGHT TABLE */
+#weight-tbody tr.highlighted td{background:rgba(201,145,42,.08);}
+#weight-tbody tr.highlighted td:last-child{color:var(--gold2);font-weight:500;}
+
+/* PHOTO UPLOAD */
+.photo-upload-zone{border:2px dashed var(--border2);border-radius:var(--r2);padding:24px;text-align:center;cursor:pointer;transition:var(--tr);background:var(--bg3);position:relative;overflow:hidden;}
+.photo-upload-zone:hover{border-color:var(--gold);background:rgba(201,145,42,.05);}
+.photo-upload-zone.has-photo{border-style:solid;border-color:var(--border3);}
+.photo-preview-img{width:100%;height:170px;object-fit:cover;border-radius:var(--r);display:none;}
+.photo-preview-img.visible{display:block;}
+.photo-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text4);}
+.photo-placeholder.hidden{display:none;}
+.photo-change-lnk{margin-top:10px;font-size:10px;color:var(--gold);cursor:pointer;letter-spacing:.5px;text-decoration:underline;display:none;}
+
+/* CATALOG GRID */
+.view-toggle{display:flex;gap:6px;}
+.view-btn{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;cursor:pointer;color:var(--text3);transition:var(--tr);}
+.view-btn.active{background:var(--gold);border-color:var(--gold);color:var(--bg);}
+.pieces-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:16px;}
+.piece-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:var(--tr);position:relative;}
+.piece-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 20%,var(--gold) 50%,transparent 80%);opacity:0;transition:opacity .22s;z-index:1;}
+.piece-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 48px rgba(0,0,0,.5);}
+.piece-card:hover::before{opacity:.7;}
+.piece-photo-wrap{width:100%;height:165px;overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;}
+.piece-photo-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease;}
+.piece-card:hover .piece-photo-wrap img{transform:scale(1.05);}
+.piece-body{padding:16px;}
+.piece-name-c{font-family:var(--fd);font-size:15px;font-weight:300;color:var(--text);letter-spacing:.5px;margin-bottom:4px;}
+.piece-meta-c{font-size:10px;color:var(--text4);letter-spacing:.5px;margin-bottom:10px;}
+.piece-price-c{font-size:20px;font-weight:300;color:var(--gold2);font-family:var(--fd);}
+.piece-actions-c{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+
+/* ACTIVITY */
+.activity-row{display:flex;align-items:flex-start;gap:14px;padding:14px 24px;border-bottom:1px solid rgba(201,145,42,.05);}
+.activity-row:last-child{border-bottom:none;}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.act-dot.gold{background:var(--gold);}
+.act-dot.green{background:var(--success);}
+.act-dot.gray{background:var(--text4);}
+.act-text{font-size:12px;color:var(--text2);flex:1;line-height:1.6;}
+.act-time{font-size:10px;color:var(--text4);white-space:nowrap;margin-top:2px;}
+
+/* AVATAR */
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,145,42,.2),rgba(201,145,42,.05));border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--gold2);flex-shrink:0;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 32px 100px rgba(0,0,0,.7);}
+.modal-header{padding:26px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:var(--fd);font-size:24px;font-weight:300;color:var(--text);letter-spacing:1px;font-style:italic;}
+.modal-body{padding:26px;}
+.modal-footer{padding:18px 28px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+.close-btn{background:none;border:1px solid var(--border);border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text3);font-size:14px;display:flex;align-items:center;justify-content:center;transition:var(--tr);}
+.close-btn:hover{border-color:var(--border3);color:var(--text);}
+
+/* LIVE PRICES */
+.live-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(201,145,42,.07);}
+.live-row:last-child{border-bottom:none;}
+.apply-btn{font-size:9px;letter-spacing:1px;text-transform:uppercase;background:rgba(201,145,42,.1);color:var(--gold);border:1px solid rgba(201,145,42,.2);border-radius:4px;padding:3px 9px;cursor:pointer;transition:var(--tr);font-family:var(--fb);}
+.apply-btn:hover{background:var(--gold);color:var(--bg);}
+
+/* MISC */
+.search-wrap{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;transition:var(--tr);}
+.search-wrap:focus-within{border-color:var(--border3);background:var(--bg4);}
+.search-wrap input{background:none;border:none;font-size:12px;color:var(--text);flex:1;padding:0;outline:none;letter-spacing:.3px;}
+.search-wrap input::placeholder{color:var(--text4);}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);color:var(--text);padding:14px 22px;border-radius:var(--r);font-size:12px;z-index:999;display:none;border:1px solid var(--border2);border-left:3px solid var(--gold);box-shadow:0 12px 48px rgba(0,0,0,.6);letter-spacing:.3px;}
+.toast.show{display:flex;align-items:center;gap:8px;animation:slideIn .22s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
+.dash-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.flex-gap{display:flex;align-items:center;gap:10px;}
+.mb16{margin-bottom:16px;}
+.mb24{margin-bottom:24px;}
+.text-gold{color:var(--gold2);}
+.text-danger{color:var(--danger);}
+.text-success{color:var(--success);}
+.empty{text-align:center;padding:48px;color:var(--text4);}
+.empty-icon{font-size:28px;margin-bottom:10px;opacity:.35;}
+.empty-text{font-size:11px;letter-spacing:1px;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+/* PHOTO UPLOAD IMPROVEMENTS */
+.photo-upload-zone{border:2px dashed var(--border2);border-radius:var(--r2);padding:24px;text-align:center;cursor:pointer;transition:var(--tr);background:var(--bg3);position:relative;overflow:hidden;min-height:130px;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.photo-upload-zone.drag-over{border-color:var(--gold);background:rgba(201,145,42,.1);transform:scale(1.01);}
+.photo-upload-zone.has-photo{border-style:solid;border-color:var(--border3);padding:0;}
+.photo-preview-img{width:100%;height:170px;object-fit:cover;border-radius:var(--r);display:none;cursor:zoom-in;}
+.photo-preview-img.visible{display:block;}
+.photo-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text4);}
+.photo-placeholder.hidden{display:none;}
+.photo-change-lnk{margin-top:8px;font-size:10px;color:var(--gold);cursor:pointer;letter-spacing:.5px;text-decoration:none;display:none;background:rgba(201,145,42,.1);border:1px solid rgba(201,145,42,.2);border-radius:4px;padding:4px 12px;}
+
+/* QUOTES */
+.quote-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:var(--tr);margin-bottom:12px;}
+.quote-card:hover{border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.quote-card-inner{display:flex;gap:0;align-items:stretch;}
+.quote-photo-thumb{width:110px;min-height:110px;object-fit:cover;flex-shrink:0;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.quote-photo-thumb img{width:110px;height:100%;object-fit:cover;}
+.quote-info{flex:1;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.quote-name{font-family:var(--fd);font-size:17px;font-weight:300;color:var(--text);}
+.quote-sub{font-size:11px;color:var(--text4);margin-top:3px;letter-spacing:.3px;}
+.quote-price{font-family:var(--fd);font-size:22px;color:var(--gold2);font-weight:300;}
+.quote-actions{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0;}
+
+
+@media(max-width:900px){
+  .sidebar{width:64px;}
+  .sidebar-logo .logo-name,.sidebar-logo .logo-tagline,.sidebar-logo .logo-gem,.sidebar-prices,.lang-bar,.nav-section{display:none;}
+  .nav-item span{display:none;}
+  .nav-item{justify-content:center;padding:14px;}
+  .main{margin-left:64px;}
+  .main::before{left:64px;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .calc-layout,.dash-grid{grid-template-columns:1fr;}
+  .content{padding:20px 18px;}
+  .topbar{padding:0 18px;}
+  .form-grid{grid-template-columns:1fr;}
+}
+
+
+/* LOCK SCREEN */
+#lock-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.lock-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:48px 40px;text-align:center;width:340px;position:relative;overflow:hidden;}
+.lock-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.lock-gem{font-size:40px;margin-bottom:16px;}
+.lock-title{font-family:var(--fd);font-size:28px;font-weight:300;color:var(--text);letter-spacing:2px;margin-bottom:4px;}
+.lock-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text4);margin-bottom:28px;}
+.lock-input{width:100%;text-align:center;font-size:22px;letter-spacing:6px;padding:14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--fb);}
+.lock-input:focus{border-color:var(--gold);background:var(--bg4);}
+.lock-error{color:var(--danger);font-size:11px;margin-top:10px;height:16px;}
+.lock-hint{font-size:10px;color:var(--text4);margin-top:16px;}
+
+/* CHARTS */
+canvas{max-width:100%;}
+
+/* STOCK ALERT */
+.stock-alert{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.stock-alert:last-child{border-bottom:none;}
+.stock-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* HISTORY */
+.hist-client{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:14px;overflow:hidden;}
+.hist-client-header{padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:var(--tr);}
+.hist-client-header:hover{background:rgba(201,145,42,.04);}
+.hist-client-body{border-top:1px solid var(--border);display:none;}
+.hist-client-body.open{display:block;}
+
+/* WHATSAPP BTN */
+.btn-whatsapp{background:#25D366;color:#fff;border-color:transparent;}
+.btn-whatsapp:hover{background:#1da851;}
+
+/* PWA INSTALL */
+.pwa-banner{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:80;transform:translateY(100%);transition:transform .3s ease;}
+.pwa-banner.show{transform:translateY(0);}
+
+/* CHART LEGEND */
+.chart-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+@media print{.sidebar,.topbar,#lock-screen,.pwa-banner{display:none!important;}}
+@media print {
+  .sidebar,.topbar,.modal-overlay .btn,.quote-actions{display:none!important;}
+  #modal-quote-preview{position:static!important;background:none!important;padding:0!important;}
+  #quote-print-area{box-shadow:none!important;border-radius:0!important;}
+  body{background:#fff!important;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-gem">✦ Joyería</div>
+    <div class="logo-name">ValGems</div>
+    <div class="logo-tagline">Gestión de orfebrería</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">General</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span data-t="dashboard">Inicio</span>
+    </div>
+    <div class="nav-section">Trabajo</div>
+    <div class="nav-item" onclick="showPage('calc',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      <span data-t="quote">Cotizar</span>
+    </div>
+    <div class="nav-item" onclick="showPage('catalog',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span data-t="catalog">Catálogo</span>
+    </div>
+    <div class="nav-item" onclick="showPage('quotes',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Cotizaciones</span>
+    </div>
+    <div class="nav-item" onclick="showPage('reports',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Reportes</span>
+    </div>
+    <div class="nav-section">Clientes</div>
+    <div class="nav-item" onclick="showPage('clients',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span data-t="clients">Clientes</span>
+    </div>
+    <div class="nav-item" onclick="showPage('sales',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+      <span data-t="sales">Ventas</span>
+    </div>
+      <div class="nav-item" onclick="showPage('history',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Historial</span>
+    </div>
+  </nav>
+  <div class="sidebar-prices">
+    <div class="price-title" data-t="prices_today">Precios hoy</div>
+    <div class="price-row"><span><span class="price-dot"></span>Plata 925</span><span class="price-val" id="sp-plata">—</span></div>
+    <div class="price-row"><span><span class="price-dot" style="background:var(--gold2)"></span>Oro 14k</span><span class="price-val" id="sp-oro14">—</span></div>
+    <div class="price-row"><span><span class="price-dot" style="background:var(--gold2)"></span>Oro 18k</span><span class="price-val" id="sp-oro18">—</span></div>
+    <div class="price-row"><span><span class="price-dot" style="background:var(--gold3)"></span>Oro 24k</span><span class="price-val" id="sp-oro24">—</span></div>
+  </div>
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('es',this)">ES</button>
+    <button class="lang-btn" onclick="setLang('en',this)">EN</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Inicio</div>
+    <div class="topbar-right" id="topbar-actions"></div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="metrics-grid" id="dash-metrics"></div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title" data-t="recent_activity">Actividad reciente</span></div>
+          <div id="activity-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title" data-t="debtors">Saldo pendiente</span></div>
+          <div id="debtors-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COTIZAR -->
+    <div class="page" id="page-calc">
+      <div class="price-hero">
+        <div>
+          <div class="hero-lbl" data-t="sale_price">Precio de venta</div>
+          <div class="hero-price" id="hero-total">$0.00</div>
+          <div class="hero-sub" id="hero-sub">— ingresa el peso para calcular —</div>
+        </div>
+        <div class="hero-meta">
+          <div class="hero-tag"><span class="hero-tag-lbl" data-t="metal">Metal:</span><span class="hero-tag-val" id="hero-metal">Plata 925</span></div>
+          <div class="hero-tag"><span class="hero-tag-lbl" data-t="weight_g">Peso:</span><span class="hero-tag-val" id="hero-peso">5 g</span></div>
+          <div class="hero-tag"><span class="hero-tag-lbl">Margen:</span><span class="hero-tag-val gold" id="hero-margen">60%</span></div>
+          <button class="btn btn-gold btn-sm" onclick="saveQuote()" data-t="save_quote" style="margin-top:6px;">Guardar cotización</button>
+        </div>
+      </div>
+      <div class="calc-layout">
+        <div class="calc-panel">
+          <div class="calc-title">Calculadora</div>
+          <div class="form-group mb16">
+            <label data-t="metal">Metal</label>
+            <div class="metal-tabs">
+              <button class="metal-tab active" onclick="selectMetal('plata925',this)">🥈<span>Plata 925</span></button>
+              <button class="metal-tab" onclick="selectMetal('oro14',this)">🥇<span>Oro 14k</span></button>
+              <button class="metal-tab" onclick="selectMetal('oro18',this)">🥇<span>Oro 18k</span></button>
+              <button class="metal-tab" onclick="selectMetal('oro24',this)">✨<span>Oro 24k</span></button>
+              <button class="metal-tab" onclick="selectMetal('resina',this)">🌸<span>Resina</span></button>
+            </div>
+          </div>
+          <div class="form-group mb16">
+            <label data-t="weight_g">Peso (gramos)</label>
+            <div style="position:relative;">
+              <input type="number" id="c-peso" value="5" min="0.01" step="0.01" oninput="calcUpdate()" style="font-size:24px;font-weight:300;padding:14px 48px 14px 16px;width:100%;"/>
+              <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text4);">g</span>
+            </div>
+            <div class="chips">
+              <span style="font-size:9px;color:var(--text4);letter-spacing:1px;align-self:center;">RÁPIDO:</span>
+              <button class="chip" onclick="setPeso(0.5)">0.5g</button>
+              <button class="chip" onclick="setPeso(1)">1g</button>
+              <button class="chip" onclick="setPeso(2)">2g</button>
+              <button class="chip" onclick="setPeso(3)">3g</button>
+              <button class="chip" onclick="setPeso(5)">5g</button>
+              <button class="chip" onclick="setPeso(8)">8g</button>
+              <button class="chip" onclick="setPeso(10)">10g</button>
+              <button class="chip" onclick="setPeso(20)">20g</button>
+            </div>
+          </div>
+          <div class="form-group mb16">
+            <label data-t="labor">Mano de obra ($)</label>
+            <input type="number" id="c-mano" value="15" min="0" step="0.5" oninput="calcUpdate()"/>
+          </div>
+          <div class="form-group mb16">
+            <label>Margen: <span id="c-margen-lbl" style="color:var(--gold2);">60%</span></label>
+            <div class="range-row">
+              <input type="range" id="c-margen" min="5" max="300" value="60" step="5" oninput="calcUpdate();document.getElementById('c-margen-lbl').textContent=this.value+'%'"/>
+              <span class="range-val" id="c-margen-disp">60%</span>
+            </div>
+            <div class="chips" style="margin-top:8px;">
+              <button class="chip" onclick="setMargen(30)">30%</button>
+              <button class="chip" onclick="setMargen(50)">50%</button>
+              <button class="chip" onclick="setMargen(60)">60%</button>
+              <button class="chip" onclick="setMargen(80)">80%</button>
+              <button class="chip" onclick="setMargen(100)">100%</button>
+              <button class="chip" onclick="setMargen(150)">150%</button>
+            </div>
+          </div>
+          <div class="form-group mb16">
+            <label>Precio manual (sobreescribe el cálculo)</label>
+            <input type="number" id="c-custom" placeholder="0.00" min="0" step="0.01" oninput="calcUpdate()"/>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title" id="weight-table-title">Tabla — Plata 925</span></div>
+            <div class="table-wrap" style="max-height:240px;overflow-y:auto;">
+              <table><thead><tr><th>Peso</th><th>Metal</th><th>Base</th><th>Venta</th></tr></thead><tbody id="weight-tbody"></tbody></table>
+            </div>
+          </div>
+          <div class="result-panel">
+            <div style="font-family:var(--fd);font-size:16px;color:var(--text4);margin-bottom:16px;font-style:italic;" data-t="summary">Resumen</div>
+            <div class="result-item"><span class="rl" data-t="metal_cost">Costo del metal</span><span class="rv" id="r-metal">—</span></div>
+            <div class="result-item"><span class="rl" data-t="labor">Mano de obra</span><span class="rv" id="r-mano">—</span></div>
+            <div class="result-item"><span class="rl" data-t="base_cost">Costo base</span><span class="rv" id="r-base">—</span></div>
+            <div class="result-item"><span class="rl" id="r-margen-lbl">Margen (60%)</span><span class="rv" id="r-margen">—</span></div>
+            <div class="result-total"><span class="rl" data-t="sale_price">Precio de venta</span><span class="rv" id="r-total">—</span></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title" data-t="live_market">Mercado en vivo</span>
+              <button class="btn btn-gold btn-sm" onclick="fetchLivePrices()" id="btn-refresh">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <span data-t="refresh">Actualizar</span>
+              </button>
+            </div>
+            <div style="padding:16px;">
+              <div id="live-prices-panel"><div style="text-align:center;padding:14px;font-size:11px;color:var(--text4);" data-t="click_refresh">Haz clic en Actualizar para obtener precios del mercado.</div></div>
+              <div id="live-timestamp" style="font-size:9px;color:var(--text4);margin-top:8px;text-align:right;letter-spacing:.5px;"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title" data-t="metal_prices">Mis precios ($/g)</span></div>
+            <div style="padding:16px;"><div id="prices-edit-rows"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATÁLOGO -->
+    <div class="page" id="page-catalog">
+      <div class="flex-between mb16">
+        <div class="search-wrap" style="flex:1;margin-right:16px;">
+          <svg width="14" height="14" fill="none" stroke="var(--text4)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="cat-search" oninput="renderCatalog()" placeholder="Buscar pieza..." data-t-placeholder="search_pieces"/>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="vg" onclick="setCatalogView('grid',this)" title="Cuadrícula">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="view-btn" id="vl" onclick="setCatalogView('list',this)" title="Lista">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="catalog-container"></div>
+    </div>
+
+
+
+    <!-- REPORTES -->
+    <div class="page" id="page-reports">
+      <div class="metrics-grid" id="rep-metrics"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Ventas por mes</span></div>
+          <div style="padding:20px;"><canvas id="chart-monthly" height="200"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Ventas por material</span></div>
+          <div style="padding:20px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-material" height="200"></canvas></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Top clientes</span></div>
+          <div id="rep-top-clients" style="padding:16px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Alertas de stock</span></div>
+          <div id="rep-stock-alerts" style="padding:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- HISTORIAL -->
+    <div class="page" id="page-history">
+      <div class="flex-between mb16">
+        <div class="search-wrap" style="flex:1;margin-right:16px;">
+          <svg width="14" height="14" fill="none" stroke="var(--text4)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="hist-search" oninput="renderHistory()" placeholder="Buscar cliente..."/>
+        </div>
+      </div>
+      <div id="history-container"></div>
+    </div>
+
+    <!-- COTIZACIONES -->
+    <div class="page" id="page-quotes">
+      <div class="flex-between mb16">
+        <div class="search-wrap" style="flex:1;margin-right:16px;">
+          <svg width="14" height="14" fill="none" stroke="var(--text4)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="quot-search" oninput="renderQuotes()" placeholder="Buscar cotización..."/>
+        </div>
+      </div>
+      <div id="quotes-container"></div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="page" id="page-clients">
+      <div class="search-wrap mb16">
+        <svg width="14" height="14" fill="none" stroke="var(--text4)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="cli-search" oninput="renderClients()" placeholder="Buscar cliente..." data-t-placeholder="search_client"/>
+      </div>
+      <div class="card table-wrap">
+        <table><thead><tr><th data-t="client">Cliente</th><th data-t="phone">Teléfono</th><th data-t="purchases">Compras</th><th data-t="balance">Saldo</th><th></th></tr></thead>
+        <tbody id="clients-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- VENTAS -->
+    <div class="page" id="page-sales">
+      <div class="search-wrap mb16">
+        <svg width="14" height="14" fill="none" stroke="var(--text4)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="sal-search" oninput="renderSales()" placeholder="Buscar venta..." data-t-placeholder="search_sale"/>
+      </div>
+      <div class="card table-wrap">
+        <table><thead><tr><th data-t="piece">Pieza</th><th data-t="client">Cliente</th><th data-t="amount">Monto</th><th data-t="date">Fecha</th><th data-t="status">Estado</th><th></th></tr></thead>
+        <tbody id="sales-tbody"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- MODAL PIEZA -->
+<div class="modal-overlay" id="modal-piece">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-piece-title">Nueva pieza</div>
+      <button class="close-btn" onclick="closeModal('modal-piece')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group mb16" style="grid-column:1/-1;">
+        <label>Fotografía de la pieza</label>
+        <div class="photo-upload-zone" id="photo-zone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handlePhotoDrop(event)">
+          <input type="file" id="photo-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;" onchange="handlePhoto(event)"/>
+          <img id="photo-preview-img" class="photo-preview-img" alt="preview" onclick="event.stopPropagation();viewPhoto(currentPhoto)"/>
+          <div class="photo-placeholder" id="photo-placeholder">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="opacity:.35;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span style="font-size:13px;letter-spacing:.5px;margin-top:4px;">Arrastra una foto aquí</span>
+            <span style="font-size:10px;color:var(--text4);margin-top:2px;">o haz clic para seleccionar · JPG, PNG, WEBP</span>
+          </div>
+          <div class="photo-change-lnk" id="photo-change-lnk" onclick="event.stopPropagation();document.getElementById('photo-input').click()">📷 Cambiar foto</div>
+        </div>
+        <div id="photo-actions" style="display:none;margin-top:8px;display:none;">
+          <button class="btn btn-sm btn-danger" onclick="removePhoto()" style="font-size:10px;">✕ Quitar foto</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Nombre</label><input id="p-name" type="text" placeholder="Ej. Anillo solitario"/></div>
+        <div class="form-group"><label>Material</label>
+          <select id="p-material"><option>Plata 925</option><option>Oro 14k</option><option>Oro 18k</option><option>Oro 24k</option><option>Resina</option><option>Mixto</option></select>
+        </div>
+        <div class="form-group"><label>Peso (g)</label><input id="p-peso" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Precio ($)</label><input id="p-price" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Stock</label><input id="p-stock" type="number" min="0" step="1" value="1"/></div>
+        <div class="form-group"><label>Emoji (sin foto)</label><input id="p-emoji" type="text" maxlength="2" value="💍"/></div>
+        <div class="form-group full"><label>Descripción</label><textarea id="p-notes" placeholder="Detalles, tallas, acabado..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-piece')" data-t="cancel">Cancelar</button>
+      <button class="btn btn-gold" onclick="savePiece()" data-t="save">Guardar pieza</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-client-title">Nuevo cliente</div>
+      <button class="close-btn" onclick="closeModal('modal-client')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nombre completo</label><input id="cl-name" type="text" placeholder="Ej. María López"/></div>
+        <div class="form-group"><label>Teléfono</label><input id="cl-phone" type="tel" placeholder="+58..."/></div>
+        <div class="form-group"><label>Email</label><input id="cl-email" type="email" placeholder="correo@..."/></div>
+        <div class="form-group full"><label>Notas</label><textarea id="cl-notes" placeholder="Preferencias, tallas..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-client')" data-t="cancel">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveClient()" data-t="save">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENTA -->
+<div class="modal-overlay" id="modal-sale">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-sale-title">Nueva venta</div>
+      <button class="close-btn" onclick="closeModal('modal-sale')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Pieza</label><select id="s-piece"></select></div>
+        <div class="form-group full"><label>Cliente</label><select id="s-client"></select></div>
+        <div class="form-group"><label>Monto ($)</label><input id="s-amount" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Abono ($)</label><input id="s-paid" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Fecha</label><input id="s-date" type="date"/></div>
+        <div class="form-group"><label>Estado</label>
+          <select id="s-status"><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option><option value="abono">Abono parcial</option></select>
+        </div>
+        <div class="form-group full"><label>Notas</label><textarea id="s-notes" placeholder="Detalles del pedido..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-sale')" data-t="cancel">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveSale()" data-t="save">Registrar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FOTO GRANDE -->
+<div class="modal-overlay" id="modal-photo" onclick="closeModal('modal-photo')">
+  <div style="position:relative;max-width:80vw;">
+    <img id="modal-photo-img" style="max-width:80vw;max-height:82vh;border-radius:var(--r2);border:1px solid var(--border2);box-shadow:0 32px 100px rgba(0,0,0,.9);" alt=""/>
+    <button class="close-btn" style="position:absolute;top:12px;right:12px;background:var(--bg2);" onclick="closeModal('modal-photo')">✕</button>
+  </div>
+</div>
+
+
+<!-- MODAL COTIZACIÓN -->
+<div class="modal-overlay" id="modal-quote">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-quote-title">Nueva cotización</div>
+      <button class="close-btn" onclick="closeModal('modal-quote')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- FOTO DE LA COTIZACIÓN -->
+      <div class="form-group mb16">
+        <label>Fotografía de la pieza</label>
+        <div class="photo-upload-zone" id="quote-photo-zone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleQuotePhotoDrop(event)"
+          style="height:180px;">
+          <input type="file" id="quote-photo-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;" onchange="handleQuotePhoto(event)"/>
+          <img id="quote-photo-preview" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);display:none;" alt=""/>
+          <div id="quote-photo-ph" class="photo-placeholder">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="opacity:.35;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span style="font-size:12px;">Foto de la pieza cotizada</span>
+            <span style="font-size:10px;color:var(--text4);">Click o arrastra</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <label style="font-size:9px;letter-spacing:1px;color:var(--text4);display:block;margin-bottom:6px;">O SELECCIONA DEL CATÁLOGO</label>
+          <select id="quote-piece-photo" onchange="loadPiecePhoto()" style="width:100%;">
+            <option value="">— Usar foto del catálogo —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Nombre de la pieza / descripción</label><input id="q-piece" type="text" placeholder="Ej. Anillo solitario Oro 18k"/></div>
+        <div class="form-group"><label>Material</label>
+          <select id="q-material"><option>Plata 925</option><option>Oro 14k</option><option>Oro 18k</option><option>Oro 24k</option><option>Resina</option><option>Mixto</option></select>
+        </div>
+        <div class="form-group"><label>Peso (g)</label><input id="q-peso" type="number" min="0" step="0.01" placeholder="0.00" oninput="autoCalcQuote()"/></div>
+        <div class="form-group full"><label>Cliente</label>
+          <select id="q-client"><option value="">— Seleccionar cliente —</option></select>
+        </div>
+        <div class="form-group"><label>Precio de venta ($)</label><input id="q-price" type="number" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Validez (días)</label><input id="q-validity" type="number" min="1" value="7" placeholder="7"/></div>
+        <div class="form-group"><label>Fecha</label><input id="q-date" type="date"/></div>
+        <div class="form-group"><label>Estado</label>
+          <select id="q-status"><option value="pendiente">Pendiente</option><option value="aprobada">Aprobada</option><option value="rechazada">Rechazada</option></select>
+        </div>
+        <div class="form-group full"><label>Notas / condiciones</label><textarea id="q-notes" placeholder="Incluye: materiales, acabado, tiempo de entrega, condiciones de pago..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-quote')">Cancelar</button>
+      <button class="btn" onclick="previewQuote()" style="border-color:var(--border3);color:var(--text);">👁 Vista previa</button>
+      <button class="btn btn-gold" onclick="saveQuoteDoc()">Guardar cotización</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW COTIZACIÓN IMPRIMIBLE -->
+<div class="modal-overlay" id="modal-quote-preview" style="align-items:flex-start;overflow-y:auto;padding:20px;">
+  <div style="width:100%;max-width:680px;margin:0 auto;position:relative;">
+    <div style="display:flex;gap:10px;margin-bottom:14px;justify-content:flex-end;">
+      <button class="btn btn-gold" onclick="printQuote()">🖨 Imprimir / Guardar PDF</button>
+      <button class="btn" onclick="closeModal('modal-quote-preview')">✕ Cerrar</button>
+    </div>
+    <div id="quote-print-area" style="background:#fff;color:#1a1710;border-radius:var(--r2);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);"></div>
+  </div>
+</div>
+
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-gem">💎</div>
+    <div class="lock-title">ValGems</div>
+    <div class="lock-sub">Gestión de orfebrería</div>
+    <input class="lock-input" id="lock-input" type="password" maxlength="6" placeholder="• • • • • •" oninput="checkPin(this.value)" autocomplete="off"/>
+    <div class="lock-error" id="lock-error"></div>
+    <div class="lock-hint" id="lock-hint">PIN predeterminado: 1234</div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:20px;" onclick="checkPin(document.getElementById('lock-input').value)">Entrar</button>
+  </div>
+</div>
+
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span style="font-size:24px;">💎</span>
+    <div><div style="font-size:13px;font-weight:500;color:var(--text);">Instalar ValGems</div><div style="font-size:11px;color:var(--text4);">Accede rápido desde tu pantalla de inicio</div></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-gold btn-sm" id="pwa-install-btn">Instalar</button>
+    <button class="btn btn-sm" onclick="document.getElementById('pwa-banner').classList.remove('show')">✕</button>
+  </div>
+</div>
+<div class="toast" id="toast">✦ <span id="toast-msg"></span></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const SK='valgems_v2';
+let lang='es', editingId=null, catView='grid', currentPhoto=null;
+
+function loadData(){
+  try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}
+  return{
+    pieces:[
+      {id:1,name:'Anillo Plata 925',material:'Plata 925',peso:4.2,price:45,stock:3,emoji:'💍',photo:'',notes:'Acabado brillante'},
+      {id:2,name:'Collar Oro 18k',material:'Oro 18k',peso:6.8,price:520,stock:1,emoji:'📿',photo:'',notes:'Cadena veneciana'},
+      {id:3,name:'Aretes Resina',material:'Resina',peso:0,price:18,stock:5,emoji:'🌸',photo:'',notes:'Flores prensadas'},
+      {id:4,name:'Pulsera Plata 925',material:'Plata 925',peso:8.1,price:78,stock:0,emoji:'✨',photo:'',notes:''},
+    ],
+    clients:[
+      {id:1,name:'María López',phone:'+58 414 1234567',email:'',notes:''},
+      {id:2,name:'Carlos Mendoza',phone:'+58 424 7654321',email:'',notes:''},
+      {id:3,name:'Ana García',phone:'+58 412 9988776',email:'',notes:'Talla 6'},
+    ],
+    sales:[
+      {id:1,pieceId:1,pieceName:'Anillo Plata 925',clientId:1,clientName:'María López',amount:45,paid:45,date:today(),status:'pagado',notes:''},
+      {id:2,pieceId:2,pieceName:'Collar Oro 18k',clientId:2,clientName:'Carlos Mendoza',amount:520,paid:200,date:daysAgo(3),status:'abono',notes:''},
+      {id:3,pieceId:3,pieceName:'Aretes Resina x2',clientId:3,clientName:'Ana García',amount:36,paid:0,date:daysAgo(7),status:'pendiente',notes:''},
+    ],
+    prices:{plata925:0.93,oro14:38.50,oro18:54.20,oro24:72.00,resina:0.15},
+    activity:[
+      {text_es:'Venta registrada — Anillo Plata 925',text_en:'Sale — Silver Ring 925',type:'gold',time:today()},
+      {text_es:'Pago recibido de Carlos Mendoza $200',text_en:'Payment from Carlos $200',type:'green',time:daysAgo(1)},
+      {text_es:'Nueva pieza: Aretes Resina',text_en:'New piece: Resin Earrings',type:'gray',time:daysAgo(3)},
+    ],
+    nextId:10,
+    quotes:[],
+  };
+}
+function saveData(){localStorage.setItem(SK,JSON.stringify(db));}
+function today(){return new Date().toISOString().split('T')[0];}
+function daysAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().split('T')[0];}
+function fmt(n){return'$'+parseFloat(n).toFixed(2);}
+function fmtDate(s){if(!s)return'—';return new Date(s+'T12:00:00').toLocaleDateString(lang==='es'?'es-VE':'en-US',{year:'numeric',month:'short',day:'numeric'});}
+function initials(n){return n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+let db=loadData();
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────────
+const T={
+  es:{dashboard:'Inicio',quote:'Cotizar',catalog:'Catálogo',clients:'Clientes',sales:'Ventas',
+    prices_today:'Precios hoy',recent_activity:'Actividad reciente',debtors:'Saldo pendiente',
+    metal_calc:'Calculadora',metal:'Metal',weight_g:'Peso (g)',labor:'Mano de obra ($)',
+    save_quote:'Guardar cotización',summary:'Resumen',metal_cost:'Costo del metal',
+    base_cost:'Costo base',sale_price:'Precio de venta',metal_prices:'Mis precios ($/g)',
+    live_market:'Mercado en vivo',refresh:'Actualizar',click_refresh:'Haz clic en Actualizar para precios del mercado.',
+    fetching:'Consultando mercado...',fetch_error:'No se pudo obtener. Intenta de nuevo.',
+    market_ref:'Fuente',apply_price:'Usar',updated_at:'Actualizado',applied:'Precio aplicado',
+    piece:'Pieza',material:'Material',stock:'Stock',client:'Cliente',phone:'Teléfono',
+    purchases:'Compras',balance:'Saldo',amount:'Monto',date:'Fecha',status:'Estado',
+    paid:'Pagado',pending:'Pendiente',partial:'Abono',cancel:'Cancelar',save:'Guardar',
+    new_piece:'Nueva pieza',new_client:'Nuevo cliente',new_sale:'Nueva venta',edit:'Editar',delete:'Eliminar',
+    total_sales:'Ventas del mes',receivable:'Por cobrar',pieces_count:'Piezas',clients_count:'Clientes',
+    mark_paid:'Marcar pagado',no_data:'Sin registros',no_debtors:'Todos al día',
+    saved:'Guardado',deleted:'Eliminado',mark_paid_ok:'Marcado como pagado',
+    search_pieces:'Buscar pieza...',search_client:'Buscar cliente...',search_sale:'Buscar venta...',
+  },
+  en:{dashboard:'Dashboard',quote:'Quote',catalog:'Catalog',clients:'Clients',sales:'Sales',
+    prices_today:"Today's prices",recent_activity:'Recent activity',debtors:'Balance due',
+    metal_calc:'Calculator',metal:'Metal',weight_g:'Weight (g)',labor:'Labor ($)',
+    save_quote:'Save quote',summary:'Summary',metal_cost:'Metal cost',
+    base_cost:'Base cost',sale_price:'Sale price',metal_prices:'My prices ($/g)',
+    live_market:'Live market',refresh:'Refresh',click_refresh:'Click Refresh for live market prices.',
+    fetching:'Fetching prices...',fetch_error:'Could not fetch. Try again.',
+    market_ref:'Source',apply_price:'Use',updated_at:'Updated',applied:'Price applied',
+    piece:'Piece',material:'Material',stock:'Stock',client:'Client',phone:'Phone',
+    purchases:'Purchases',balance:'Balance',amount:'Amount',date:'Date',status:'Status',
+    paid:'Paid',pending:'Pending',partial:'Partial',cancel:'Cancel',save:'Save',
+    new_piece:'New piece',new_client:'New client',new_sale:'New sale',edit:'Edit',delete:'Delete',
+    total_sales:'Monthly sales',receivable:'Receivable',pieces_count:'Pieces',clients_count:'Clients',
+    mark_paid:'Mark paid',no_data:'No records',no_debtors:'All settled',
+    saved:'Saved',deleted:'Deleted',mark_paid_ok:'Marked as paid',
+    search_pieces:'Search piece...',search_client:'Search client...',search_sale:'Search sale...',
+  }
+};
+function t(k){return(T[lang]&&T[lang][k])||k;}
+function applyTranslations(){
+  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=t(el.getAttribute('data-t')));
+  document.querySelectorAll('[data-t-placeholder]').forEach(el=>el.placeholder=t(el.getAttribute('data-t-placeholder')));
+}
+function setLang(l,btn){lang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyTranslations();renderAll();}
+
+// ── NAV ───────────────────────────────────────────────────────────────
+function showPage(id,navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(navEl)navEl.classList.add('active');
+  const titles={dashboard:'dashboard',calc:'quote',catalog:'catalog',clients:'clients',sales:'sales',quotes:'Cotizaciones',reports:'Reportes',history:'Historial de clientes'};
+  document.getElementById('page-title').textContent=t(titles[id]||id);
+  updateActions(id);
+  if(id==='dashboard')renderDashboard();
+  if(id==='catalog')renderCatalog();
+  if(id==='clients')renderClients();
+  if(id==='sales')renderSales();
+  if(id==='calc'){renderPricesEdit();calcUpdate();}
+  if(id==='quotes')renderQuotes();
+  if(id==='history')renderHistory();
+  if(id==='reports'){loadChartJs(renderReports);}
+}
+function updateActions(p){
+  const el=document.getElementById('topbar-actions');
+  if(p==='catalog')el.innerHTML=`<button class="btn btn-gold" onclick="openPieceModal()">+ ${t('new_piece')}</button>`;
+  else if(p==='clients')el.innerHTML=`<button class="btn btn-gold" onclick="openClientModal()">+ ${t('new_client')}</button>`;
+  else if(p==='sales')el.innerHTML=`<button class="btn btn-gold" onclick="openSaleModal()">+ ${t('new_sale')}</button>`;
+  else if(p==='quotes')el.innerHTML=`<button class="btn btn-gold" onclick="openQuoteModal()">+ Nueva cotización</button>`;
+  else if(p==='history')el.innerHTML=`<button class="btn btn-sm" onclick="changePin()" style="border-color:var(--border3);">🔐 Cambiar PIN</button>`;
+  else if(p==='reports')el.innerHTML=`<button class="btn btn-sm" onclick="loadChartJs(renderReports)">↺ Actualizar</button>`;
+  else el.innerHTML='';
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────
+function renderDashboard(){
+  const m=new Date().toISOString().slice(0,7);
+  const ms=db.sales.filter(s=>s.date&&s.date.startsWith(m));
+  const ts=ms.reduce((a,s)=>a+s.amount,0);
+  const rc=db.sales.filter(s=>s.status!=='pagado').reduce((a,s)=>a+(s.amount-s.paid),0);
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-lbl">${t('total_sales')}</div><div class="metric-val">${fmt(ts)}</div><div class="metric-sub">${ms.length} ventas</div><div class="metric-accent">◈</div></div>
+    <div class="metric-card"><div class="metric-lbl">${t('receivable')}</div><div class="metric-val" style="color:var(--danger)">${fmt(rc)}</div><div class="metric-sub down">${db.sales.filter(s=>s.status!=='pagado').length} pendientes</div><div class="metric-accent">◆</div></div>
+    <div class="metric-card"><div class="metric-lbl">${t('pieces_count')}</div><div class="metric-val">${db.pieces.length}</div><div class="metric-sub">${db.pieces.filter(p=>p.stock===0).length} sin stock</div><div class="metric-accent">✦</div></div>
+    <div class="metric-card"><div class="metric-lbl">${t('clients_count')}</div><div class="metric-val">${db.clients.length}</div><div class="metric-sub">&nbsp;</div><div class="metric-accent">◉</div></div>`;
+  const al=document.getElementById('activity-list');
+  if(!db.activity.length){al.innerHTML=`<div class="empty"><div class="empty-text">${t('no_data')}</div></div>`;return;}
+  al.innerHTML=db.activity.slice().reverse().slice(0,6).map(a=>`
+    <div class="activity-row">
+      <div class="act-dot ${a.type||'gold'}"></div>
+      <div class="act-text">${lang==='en'?(a.text_en||a.text_es):a.text_es}</div>
+      <div class="act-time">${fmtDate(a.time)}</div>
+    </div>`).join('');
+  const debtors=db.clients.map(c=>({...c,bal:db.sales.filter(s=>s.clientId===c.id&&s.status!=='pagado').reduce((a,s)=>a+(s.amount-s.paid),0)})).filter(c=>c.bal>0);
+  const dl=document.getElementById('debtors-list');
+  if(!debtors.length){dl.innerHTML=`<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">${t('no_debtors')}</div></div>`;return;}
+  dl.innerHTML=`<table style="width:100%"><tbody>${debtors.map(c=>`<tr><td><div class="flex-gap"><div class="avatar">${initials(c.name)}</div><span>${c.name}</span></div></td><td class="text-danger">${fmt(c.bal)}</td></tr>`).join('')}</tbody></table>`;
+}
+
+// ── CALCULATOR ────────────────────────────────────────────────────────
+const ML={plata925:'Plata 925',oro14:'Oro 14k',oro18:'Oro 18k',oro24:'Oro 24k',resina:'Resina'};
+let cMetal='plata925';
+function selectMetal(k,btn){cMetal=k;document.querySelectorAll('.metal-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');calcUpdate();}
+function setPeso(v){document.getElementById('c-peso').value=v;calcUpdate();}
+function setMargen(v){document.getElementById('c-margen').value=v;document.getElementById('c-margen-lbl').textContent=v+'%';document.getElementById('c-margen-disp').textContent=v+'%';calcUpdate();}
+
+function calcUpdate(){
+  const peso=parseFloat(document.getElementById('c-peso').value)||0;
+  const mano=parseFloat(document.getElementById('c-mano').value)||0;
+  const margen=parseInt(document.getElementById('c-margen').value)/100;
+  const custom=parseFloat(document.getElementById('c-custom').value)||0;
+  const ppg=db.prices[cMetal]||0;
+  const cm=peso*ppg,base=cm+mano,gan=base*margen,computed=base+gan,total=custom>0?custom:computed;
+  document.getElementById('r-metal').textContent=fmt(cm);
+  document.getElementById('r-mano').textContent=fmt(mano);
+  document.getElementById('r-base').textContent=fmt(base);
+  document.getElementById('r-margen').textContent=fmt(gan);
+  document.getElementById('r-margen-lbl').textContent=`${lang==='es'?'Margen':'Margin'} (${Math.round(margen*100)}%)`;
+  document.getElementById('r-total').textContent=fmt(total);
+  document.getElementById('c-margen-disp').textContent=Math.round(margen*100)+'%';
+  document.getElementById('c-margen-lbl').textContent=Math.round(margen*100)+'%';
+  document.getElementById('hero-total').textContent=fmt(total);
+  document.getElementById('hero-metal').textContent=ML[cMetal];
+  document.getElementById('hero-peso').textContent=peso+' g';
+  document.getElementById('hero-margen').textContent=Math.round(margen*100)+'%';
+  document.getElementById('hero-sub').textContent=custom>0?'⚠ precio manual aplicado':`${fmt(cm)} metal + ${fmt(mano)} labor + ${Math.round(margen*100)}% margen`;
+  renderWeightTable(cMetal,mano,margen,peso);
+}
+function renderWeightTable(metal,mano,margen,cur){
+  const ppg=db.prices[metal]||0;
+  const ws=[0.5,1,1.5,2,3,4,5,6,7,8,10,12,15,18,20,25,30];
+  document.getElementById('weight-table-title').textContent=(lang==='es'?'Tabla — ':'Table — ')+(ML[metal]||metal);
+  document.getElementById('weight-tbody').innerHTML=ws.map(w=>{
+    const cm=w*ppg,base=cm+mano,tot=base+base*margen,isA=Math.abs(w-cur)<0.01;
+    return`<tr class="${isA?'highlighted':''}">
+      <td style="color:${isA?'var(--gold2)':'inherit'}">${w}g${isA?' ◀':''}</td>
+      <td>${fmt(cm)}</td><td>${fmt(base)}</td><td style="font-weight:${isA?'500':'400'}">${fmt(tot)}</td></tr>`;
+  }).join('');
+}
+function renderPricesEdit(){
+  const L={plata925:'Plata 925',oro14:'Oro 14k',oro18:'Oro 18k',oro24:'Oro 24k',resina:'Resina'};
+  document.getElementById('prices-edit-rows').innerHTML=Object.keys(db.prices).map(k=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="font-size:11px;color:var(--text3);min-width:70px;">${L[k]}</span>
+      <input type="number" step="0.0001" min="0" value="${db.prices[k]}" style="width:110px;font-size:12px;" onchange="updatePrice('${k}',this.value)"/>
+      <span style="font-size:10px;color:var(--text4);">$/g</span>
+    </div>`).join('');
+  renderSidePrices();
+}
+function updatePrice(k,v){db.prices[k]=parseFloat(v)||0;saveData();calcUpdate();}
+function saveQuote(){
+  db.activity.push({text_es:`Cotización: ${ML[cMetal]} ${document.getElementById('c-peso').value}g → ${document.getElementById('r-total').textContent}`,text_en:`Quote saved`,type:'gray',time:today()});
+  saveData();showToast(t('saved'));
+}
+
+// ── PHOTO ─────────────────────────────────────────────────────────────
+function handlePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    currentPhoto=ev.target.result;
+    const img=document.getElementById('photo-preview-img');
+    img.src=currentPhoto;img.classList.add('visible');
+    document.getElementById('photo-placeholder').classList.add('hidden');
+    document.getElementById('photo-change-lnk').style.display='block';
+    document.getElementById('photo-zone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+function resetPhoto(){
+  currentPhoto=null;
+  const img=document.getElementById('photo-preview-img');
+  img.src='';img.classList.remove('visible');
+  document.getElementById('photo-placeholder').classList.remove('hidden');
+  document.getElementById('photo-change-lnk').style.display='none';
+  document.getElementById('photo-zone').classList.remove('has-photo');
+  document.getElementById('photo-input').value='';
+}
+
+// ── CATALOG ───────────────────────────────────────────────────────────
+function setCatalogView(v,btn){catView=v;document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCatalog();}
+function renderCatalog(){
+  const q=(document.getElementById('cat-search')?.value||'').toLowerCase();
+  const pieces=db.pieces.filter(p=>p.name.toLowerCase().includes(q)||p.material.toLowerCase().includes(q));
+  const cont=document.getElementById('catalog-container');
+  if(!pieces.length){cont.innerHTML=`<div class="empty"><div class="empty-icon">◈</div><div class="empty-text">${t('no_data')}</div></div>`;return;}
+  if(catView==='grid'){
+    cont.innerHTML=`<div class="pieces-grid">${pieces.map(p=>`
+      <div class="piece-card">
+        <div class="piece-photo-wrap" onclick="${p.photo?`viewPhoto('${p.photo.replace(/'/g,"\\'")}')`:''}" style="${p.photo?'cursor:pointer':''}">
+          ${p.photo?`<img src="${p.photo}" alt="${p.name}"/>`:p.emoji||'💍'}
+        </div>
+        <div class="piece-body">
+          <div class="piece-name-c">${p.name}</div>
+          <div class="piece-meta-c">${p.material}${p.peso?' · '+p.peso+'g':''}</div>
+          <div class="piece-price-c">${fmt(p.price)}</div>
+          <div style="margin-top:8px;"><span class="badge ${p.stock>0?'badge-success':'badge-danger'}">${p.stock>0?p.stock+' und.':'Sin stock'}</span></div>
+          <div class="piece-actions-c">
+            <button class="btn btn-sm" onclick="editPiece(${p.id})" style="flex:1;justify-content:center;">${t('edit')}</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePiece(${p.id})" style="flex:1;justify-content:center;">${t('delete')}</button>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+  } else {
+    cont.innerHTML=`<div class="card table-wrap"><table><thead><tr><th>Pieza</th><th>Material</th><th>Peso</th><th>Precio</th><th>Stock</th><th></th></tr></thead><tbody>${pieces.map(p=>`
+      <tr><td><div class="flex-gap">
+        <div style="width:44px;height:44px;border-radius:var(--r);overflow:hidden;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;${p.photo?'cursor:pointer':''}" onclick="${p.photo?`viewPhoto('${p.photo.replace(/'/g,"\\'")}')`:''} ">
+          ${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;" alt=""/>`:p.emoji||'💍'}
+        </div>
+        <div><div style="color:var(--text)">${p.name}</div><div style="font-size:10px;color:var(--text4)">${p.notes||''}</div></div></div></td>
+        <td>${p.material}</td><td>${p.peso?p.peso+'g':'—'}</td>
+        <td class="text-gold">${fmt(p.price)}</td>
+        <td><span class="badge ${p.stock>0?'badge-success':'badge-danger'}">${p.stock>0?p.stock:'Sin stock'}</span></td>
+        <td><div class="flex-gap">
+          <button class="btn btn-sm" onclick="editPiece(${p.id})">${t('edit')}</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePiece(${p.id})">${t('delete')}</button>
+        </div></td></tr>`).join('')}</tbody></table></div>`;
+  }
+}
+function viewPhoto(photo){
+  if(!photo)return;
+  document.getElementById('modal-photo-img').src=photo;
+  document.getElementById('modal-photo').classList.add('open');
+}
+function openPieceModal(id){
+  editingId=id||null;resetPhoto();
+  document.getElementById('modal-piece-title').textContent=id?t('edit')+' pieza':t('new_piece');
+  if(id){
+    const p=db.pieces.find(x=>x.id===id);
+    document.getElementById('p-name').value=p.name;
+    document.getElementById('p-material').value=p.material;
+    document.getElementById('p-peso').value=p.peso;
+    document.getElementById('p-price').value=p.price;
+    document.getElementById('p-stock').value=p.stock;
+    document.getElementById('p-emoji').value=p.emoji||'💍';
+    document.getElementById('p-notes').value=p.notes||'';
+    if(p.photo){currentPhoto=p.photo;const img=document.getElementById('photo-preview-img');img.src=p.photo;img.classList.add('visible');document.getElementById('photo-placeholder').classList.add('hidden');document.getElementById('photo-change-lnk').style.display='block';document.getElementById('photo-zone').classList.add('has-photo');}
+  } else {
+    ['p-name','p-peso','p-price','p-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('p-stock').value=1;document.getElementById('p-emoji').value='💍';
+  }
+  document.getElementById('modal-piece').classList.add('open');
+}
+function editPiece(id){openPieceModal(id);}
+function savePiece(){
+  const name=document.getElementById('p-name').value.trim();if(!name)return;
+  const piece={id:editingId||(++db.nextId),name,material:document.getElementById('p-material').value,
+    peso:parseFloat(document.getElementById('p-peso').value)||0,
+    price:parseFloat(document.getElementById('p-price').value)||0,
+    stock:parseInt(document.getElementById('p-stock').value)||0,
+    emoji:document.getElementById('p-emoji').value||'💍',
+    notes:document.getElementById('p-notes').value.trim(),
+    photo:currentPhoto||'',
+  };
+  if(editingId){db.pieces=db.pieces.map(p=>p.id===editingId?piece:p);}
+  else{db.pieces.push(piece);db.activity.push({text_es:`Nueva pieza: ${name}`,text_en:`New piece: ${name}`,type:'gray',time:today()});}
+  saveData();closeModal('modal-piece');renderCatalog();showToast(t('saved'));
+}
+function deletePiece(id){
+  if(!confirm(lang==='es'?'¿Eliminar esta pieza?':'Delete this piece?'))return;
+  db.pieces=db.pieces.filter(p=>p.id!==id);saveData();renderCatalog();showToast(t('deleted'));
+}
+
+// ── CLIENTS ───────────────────────────────────────────────────────────
+function renderClients(){
+  const q=(document.getElementById('cli-search')?.value||'').toLowerCase();
+  const clients=db.clients.filter(c=>c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));
+  const tbody=document.getElementById('clients-tbody');
+  if(!clients.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">${t('no_data')}</td></tr>`;return;}
+  tbody.innerHTML=clients.map(c=>{
+    const purchases=db.sales.filter(s=>s.clientId===c.id).length;
+    const bal=db.sales.filter(s=>s.clientId===c.id&&s.status!=='pagado').reduce((a,s)=>a+(s.amount-s.paid),0);
+    return`<tr><td><div class="flex-gap"><div class="avatar">${initials(c.name)}</div><div><div style="color:var(--text)">${c.name}</div><div style="font-size:10px;color:var(--text4)">${c.email||''}</div></div></div></td>
+      <td>${c.phone||'—'}</td><td>${purchases}</td>
+      <td><span class="${bal>0?'text-danger':'text-success'}">${bal>0?fmt(bal):'✓'}</span></td>
+      <td><div class="flex-gap">
+        <button class="btn btn-sm" onclick="editClient(${c.id})">${t('edit')}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id})">${t('delete')}</button>
+      </div></td></tr>`;
+  }).join('');
+}
+function openClientModal(id){
+  editingId=id||null;
+  document.getElementById('modal-client-title').textContent=id?t('edit'):t('new_client');
+  if(id){const c=db.clients.find(x=>x.id===id);document.getElementById('cl-name').value=c.name;document.getElementById('cl-phone').value=c.phone||'';document.getElementById('cl-email').value=c.email||'';document.getElementById('cl-notes').value=c.notes||'';}
+  else{['cl-name','cl-phone','cl-email','cl-notes'].forEach(i=>document.getElementById(i).value='');}
+  document.getElementById('modal-client').classList.add('open');
+}
+function editClient(id){openClientModal(id);}
+function saveClient(){
+  const name=document.getElementById('cl-name').value.trim();if(!name)return;
+  const client={id:editingId||(++db.nextId),name,phone:document.getElementById('cl-phone').value.trim(),email:document.getElementById('cl-email').value.trim(),notes:document.getElementById('cl-notes').value.trim()};
+  if(editingId){db.clients=db.clients.map(c=>c.id===editingId?client:c);}
+  else{db.clients.push(client);db.activity.push({text_es:`Nuevo cliente: ${name}`,text_en:`New client: ${name}`,type:'green',time:today()});}
+  saveData();closeModal('modal-client');renderClients();showToast(t('saved'));
+}
+function deleteClient(id){
+  if(!confirm(lang==='es'?'¿Eliminar cliente?':'Delete client?'))return;
+  db.clients=db.clients.filter(c=>c.id!==id);saveData();renderClients();showToast(t('deleted'));
+}
+
+// ── SALES ─────────────────────────────────────────────────────────────
+function renderSales(){
+  const q=(document.getElementById('sal-search')?.value||'').toLowerCase();
+  const sales=db.sales.filter(s=>s.pieceName.toLowerCase().includes(q)||s.clientName.toLowerCase().includes(q));
+  const tbody=document.getElementById('sales-tbody');
+  if(!sales.length){tbody.innerHTML=`<tr><td colspan="6" class="empty">${t('no_data')}</td></tr>`;return;}
+  tbody.innerHTML=sales.slice().reverse().map(s=>{
+    const sc=s.status==='pagado'?'badge-success':s.status==='abono'?'badge-warn':'badge-danger';
+    const st=s.status==='pagado'?t('paid'):s.status==='abono'?t('partial'):t('pending');
+    const bal=s.amount-s.paid;
+    return`<tr><td style="color:var(--text)">${s.pieceName}</td><td>${s.clientName}</td>
+      <td><div class="text-gold">${fmt(s.amount)}</div>${bal>0?`<div style="font-size:10px;color:var(--danger)">Debe: ${fmt(bal)}</div>`:''}</td>
+      <td style="color:var(--text4)">${fmtDate(s.date)}</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td><div class="flex-gap">
+        ${s.status!=='pagado'?`<button class="btn btn-sm" onclick="markPaid(${s.id})">${t('mark_paid')}</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteSale(${s.id})">${t('delete')}</button>
+      </div></td></tr>`;
+  }).join('');
+}
+function openSaleModal(){
+  editingId=null;
+  document.getElementById('modal-sale-title').textContent=t('new_sale');
+  document.getElementById('s-piece').innerHTML=`<option value="">— Seleccionar —</option>`+db.pieces.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('s-client').innerHTML=`<option value="">— Seleccionar —</option>`+db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('s-date').value=today();
+  ['s-amount','s-paid','s-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('s-status').value='pagado';
+  document.getElementById('modal-sale').classList.add('open');
+}
+function saveSale(){
+  const pieceId=parseInt(document.getElementById('s-piece').value);
+  const clientId=parseInt(document.getElementById('s-client').value);
+  if(!pieceId||!clientId)return;
+  const piece=db.pieces.find(p=>p.id===pieceId),client=db.clients.find(c=>c.id===clientId);
+  const amount=parseFloat(document.getElementById('s-amount').value)||(piece?piece.price:0);
+  const status=document.getElementById('s-status').value;
+  const paid=parseFloat(document.getElementById('s-paid').value)||(status==='pagado'?amount:0);
+  const sale={id:++db.nextId,pieceId,pieceName:piece.name,clientId,clientName:client.name,amount,paid,date:document.getElementById('s-date').value,status,notes:document.getElementById('s-notes').value.trim()};
+  db.sales.push(sale);
+  db.activity.push({text_es:`Venta: ${piece.name} a ${client.name}`,text_en:`Sale: ${piece.name} to ${client.name}`,type:'gold',time:today()});
+  saveData();closeModal('modal-sale');renderSales();showToast(t('saved'));
+}
+function markPaid(id){
+  db.sales=db.sales.map(s=>s.id===id?{...s,paid:s.amount,status:'pagado'}:s);
+  const s=db.sales.find(x=>x.id===id);
+  db.activity.push({text_es:`Pago: ${s.clientName} ${fmt(s.amount)}`,text_en:`Payment: ${s.clientName} ${fmt(s.amount)}`,type:'green',time:today()});
+  saveData();renderSales();showToast(t('mark_paid_ok'));
+}
+function deleteSale(id){
+  if(!confirm(lang==='es'?'¿Eliminar venta?':'Delete sale?'))return;
+  db.sales=db.sales.filter(s=>s.id!==id);saveData();renderSales();showToast(t('deleted'));
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function showToast(msg){document.getElementById('toast-msg').textContent=msg;const el=document.getElementById('toast');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+// ── LIVE PRICES ───────────────────────────────────────────────────────
+async function fetchLivePrices(){
+  const panel=document.getElementById('live-prices-panel');
+  const btn=document.getElementById('btn-refresh');
+  panel.innerHTML=`<div style="text-align:center;padding:16px;font-size:11px;color:var(--text4);">
+    <svg style="animation:spin 1s linear infinite;display:inline-block;" width="18" height="18" fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    <div style="margin-top:6px;">${t('fetching')}</div></div>`;
+  btn.disabled=true;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'Search for the current real-time spot prices of Gold (XAU/USD) and Silver (XAG/USD). Return ONLY valid JSON no markdown: {"silver_oz":NUM,"gold_oz":NUM,"silver_g":NUM,"gold_g":NUM,"gold_14k_g":NUM,"gold_18k_g":NUM,"gold_24k_g":NUM,"silver_925_g":NUM,"source":"NAME","date":"YYYY-MM-DD"} where silver_g=silver_oz/31.1035, gold_g=gold_oz/31.1035, gold_14k_g=gold_g*0.585, gold_18k_g=gold_g*0.75, gold_24k_g=gold_g, silver_925_g=silver_g*0.925'}]})});
+    const data=await resp.json();
+    const text=data.content.map(b=>b.type==='text'?b.text:'').join('');
+    const match=text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('No JSON');
+    const prices=JSON.parse(match[0]);
+    const prev={...db.prices};
+    db.prices.plata925=parseFloat(prices.silver_925_g.toFixed(4));
+    db.prices.oro14=parseFloat(prices.gold_14k_g.toFixed(4));
+    db.prices.oro18=parseFloat(prices.gold_18k_g.toFixed(4));
+    db.prices.oro24=parseFloat(prices.gold_24k_g.toFixed(4));
+    saveData();
+    const metals=[
+      {key:'plata925',label:'Plata 925',oz:prices.silver_oz,g:prices.silver_925_g,prev:prev.plata925},
+      {key:'oro14',label:'Oro 14k',oz:prices.gold_oz,g:prices.gold_14k_g,prev:prev.oro14},
+      {key:'oro18',label:'Oro 18k',oz:prices.gold_oz,g:prices.gold_18k_g,prev:prev.oro18},
+      {key:'oro24',label:'Oro 24k',oz:prices.gold_oz,g:prices.gold_24k_g,prev:prev.oro24},
+    ];
+    panel.innerHTML=metals.map(m=>{
+      const diff=m.g-m.prev,pct=m.prev>0?((diff/m.prev)*100).toFixed(2):'0.00';
+      const trend=diff>0.001?`<span style="color:var(--success);font-size:10px;">▲ ${pct}%</span>`:diff<-0.001?`<span style="color:var(--danger);font-size:10px;">▼ ${Math.abs(pct)}%</span>`:`<span style="color:var(--text4);font-size:10px;">—</span>`;
+      return`<div class="live-row">
+        <div><div style="font-size:12px;color:var(--text2);">${m.label}</div><div style="font-size:10px;color:var(--text4);">$${m.oz.toFixed(2)}/oz · ${trend}</div></div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="font-size:14px;color:var(--gold2);">$${m.g.toFixed(4)}/g</div>
+          <button class="apply-btn" onclick="applyLivePrice('${m.key}',${m.g.toFixed(4)})">${t('apply_price')}</button>
+        </div></div>`;
+    }).join('')+`<div style="margin-top:10px;font-size:10px;color:var(--text4);">Resina: precio manual</div>`;
+    document.getElementById('live-timestamp').textContent=`${t('updated_at')}: ${new Date().toLocaleTimeString()} · ${prices.source||'web'}`;
+    renderPricesEdit();renderSidePrices();calcUpdate();
+  }catch(err){
+    panel.innerHTML=`<div style="text-align:center;padding:16px;font-size:11px;color:var(--danger);">⚠ ${t('fetch_error')}<br><span style="color:var(--text4);">${err.message}</span></div>`;
+  }
+  btn.disabled=false;
+}
+function applyLivePrice(k,v){db.prices[k]=v;saveData();renderPricesEdit();calcUpdate();showToast(t('applied'));}
+function renderSidePrices(){
+  document.getElementById('sp-plata').textContent='$'+db.prices.plata925.toFixed(4)+'/g';
+  document.getElementById('sp-oro14').textContent='$'+db.prices.oro14.toFixed(4)+'/g';
+  document.getElementById('sp-oro18').textContent='$'+db.prices.oro18.toFixed(4)+'/g';
+  document.getElementById('sp-oro24').textContent='$'+db.prices.oro24.toFixed(4)+'/g';
+}
+
+
+// ── QUOTES ────────────────────────────────────────────────────────────
+let currentQuotePhoto = null;
+
+function handleQuotePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    currentQuotePhoto=ev.target.result;
+    const img=document.getElementById('quote-photo-preview');
+    img.src=currentQuotePhoto;img.style.display='block';
+    document.getElementById('quote-photo-ph').style.display='none';
+    document.getElementById('quote-photo-zone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+function handleQuotePhotoDrop(e){
+  e.preventDefault();document.getElementById('quote-photo-zone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];if(!file||!file.type.startsWith('image/'))return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    currentQuotePhoto=ev.target.result;
+    const img=document.getElementById('quote-photo-preview');
+    img.src=currentQuotePhoto;img.style.display='block';
+    document.getElementById('quote-photo-ph').style.display='none';
+    document.getElementById('quote-photo-zone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+function loadPiecePhoto(){
+  const sel=document.getElementById('quote-piece-photo');
+  const pieceId=parseInt(sel.value);
+  if(!pieceId)return;
+  const piece=db.pieces.find(p=>p.id===pieceId);
+  if(piece&&piece.photo){
+    currentQuotePhoto=piece.photo;
+    const img=document.getElementById('quote-photo-preview');
+    img.src=currentQuotePhoto;img.style.display='block';
+    document.getElementById('quote-photo-ph').style.display='none';
+    document.getElementById('quote-photo-zone').classList.add('has-photo');
+    document.getElementById('q-piece').value=piece.name;
+    document.getElementById('q-material').value=piece.material;
+    document.getElementById('q-peso').value=piece.peso;
+    document.getElementById('q-price').value=piece.price;
+  }
+}
+function autoCalcQuote(){
+  const peso=parseFloat(document.getElementById('q-peso').value)||0;
+  if(peso>0&&!document.getElementById('q-price').value){
+    const mat=document.getElementById('q-material').value;
+    const key=mat.includes('Plata')?'plata925':mat.includes('14k')?'oro14':mat.includes('18k')?'oro18':mat.includes('24k')?'oro24':'resina';
+    const ppg=db.prices[key]||0;
+    const base=peso*ppg+15;
+    document.getElementById('q-price').value=(base+base*0.6).toFixed(2);
+  }
+}
+function openQuoteModal(){
+  currentQuotePhoto=null;
+  document.getElementById('modal-quote-title').textContent='Nueva cotización';
+  document.getElementById('quote-photo-preview').style.display='none';
+  document.getElementById('quote-photo-ph').style.display='flex';
+  document.getElementById('quote-photo-zone').classList.remove('has-photo');
+  document.getElementById('quote-photo-input').value='';
+  ['q-piece','q-peso','q-price','q-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('q-validity').value=7;
+  document.getElementById('q-date').value=today();
+  document.getElementById('q-status').value='pendiente';
+  const cs=document.getElementById('q-client');
+  cs.innerHTML='<option value="">— Seleccionar cliente —</option>'+db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const ps=document.getElementById('quote-piece-photo');
+  ps.innerHTML='<option value="">— Usar foto del catálogo —</option>'+db.pieces.filter(p=>p.photo).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('modal-quote').classList.add('open');
+}
+function saveQuoteDoc(){
+  const piece=document.getElementById('q-piece').value.trim();if(!piece)return;
+  const clientId=parseInt(document.getElementById('q-client').value)||null;
+  const client=clientId?db.clients.find(c=>c.id===clientId):null;
+  const quote={
+    id:++db.nextId,
+    piece,material:document.getElementById('q-material').value,
+    peso:parseFloat(document.getElementById('q-peso').value)||0,
+    clientId,clientName:client?client.name:'—',clientPhone:client?client.phone:'',
+    price:parseFloat(document.getElementById('q-price').value)||0,
+    validity:parseInt(document.getElementById('q-validity').value)||7,
+    date:document.getElementById('q-date').value,
+    status:document.getElementById('q-status').value,
+    notes:document.getElementById('q-notes').value.trim(),
+    photo:currentQuotePhoto||'',
+  };
+  if(!db.quotes)db.quotes=[];
+  db.quotes.push(quote);
+  db.activity.push({text_es:`Cotización: ${piece} para ${quote.clientName}`,text_en:`Quote: ${piece} for ${quote.clientName}`,type:'gold',time:today()});
+  saveData();closeModal('modal-quote');renderQuotes();showToast('Cotización guardada');
+}
+function renderQuotes(){
+  if(!db.quotes)db.quotes=[];
+  const q=(document.getElementById('quot-search')?.value||'').toLowerCase();
+  const quotes=db.quotes.filter(qt=>qt.piece.toLowerCase().includes(q)||qt.clientName.toLowerCase().includes(q));
+  const cont=document.getElementById('quotes-container');
+  if(!quotes.length){cont.innerHTML=`<div class="empty"><div class="empty-icon">◈</div><div class="empty-text">Sin cotizaciones · Crea una con el botón +</div></div>`;return;}
+  const statusStyles={pendiente:'badge-warn',aprobada:'badge-success',rechazada:'badge-danger'};
+  const statusLabels={pendiente:'Pendiente',aprobada:'Aprobada',rechazada:'Rechazada'};
+  cont.innerHTML=quotes.slice().reverse().map(qt=>`
+    <div class="quote-card">
+      <div class="quote-card-inner">
+        <div class="quote-photo-thumb">
+          ${qt.photo?`<img src="${qt.photo}" alt="${qt.piece}"/>`:'📋'}
+        </div>
+        <div class="quote-info">
+          <div style="flex:1;">
+            <div class="quote-name">${qt.piece}</div>
+            <div class="quote-sub">${qt.material}${qt.peso?' · '+qt.peso+'g':''} · Cliente: ${qt.clientName} · ${fmtDate(qt.date)}</div>
+            ${qt.notes?`<div style="font-size:11px;color:var(--text4);margin-top:4px;font-style:italic;">${qt.notes.slice(0,80)}${qt.notes.length>80?'…':''}</div>`:''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="quote-price">${fmt(qt.price)}</div>
+            <div style="margin-top:6px;"><span class="badge ${statusStyles[qt.status]||'badge-gray'}">${statusLabels[qt.status]||qt.status}</span></div>
+            <div style="font-size:10px;color:var(--text4);margin-top:4px;">Válida ${qt.validity} días</div>
+          </div>
+        </div>
+        <div class="quote-actions" style="padding:16px;flex-direction:column;border-left:1px solid var(--border);">
+          <button class="btn btn-gold btn-sm" onclick="previewQuoteById(${qt.id})" style="white-space:nowrap;">🖨 PDF</button>
+          <button class="btn btn-sm" onclick="editQuote(${qt.id})" style="margin-top:6px;">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteQuote(${qt.id})" style="margin-top:6px;">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function deleteQuote(id){
+  if(!confirm('¿Eliminar esta cotización?'))return;
+  db.quotes=db.quotes.filter(q=>q.id!==id);saveData();renderQuotes();showToast('Eliminada');
+}
+function previewQuoteById(id){
+  const qt=db.quotes.find(q=>q.id===id);if(!qt)return;
+  showQuotePreview(qt);
+}
+function previewQuote(){
+  const piece=document.getElementById('q-piece').value.trim();if(!piece)return;
+  const clientId=parseInt(document.getElementById('q-client').value)||null;
+  const client=clientId?db.clients.find(c=>c.id===clientId):null;
+  const qt={piece,material:document.getElementById('q-material').value,
+    peso:parseFloat(document.getElementById('q-peso').value)||0,
+    clientName:client?client.name:'—',clientPhone:client?client.phone:'',
+    price:parseFloat(document.getElementById('q-price').value)||0,
+    validity:parseInt(document.getElementById('q-validity').value)||7,
+    date:document.getElementById('q-date').value,
+    notes:document.getElementById('q-notes').value.trim(),
+    photo:currentQuotePhoto||''};
+  showQuotePreview(qt);
+}
+function showQuotePreview(qt){
+  const expDate=new Date(qt.date+'T12:00:00');expDate.setDate(expDate.getDate()+qt.validity);
+  const expStr=expDate.toLocaleDateString('es-VE',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('quote-print-area').innerHTML=`
+  <div style="padding:48px;font-family:'Jost',sans-serif;background:#fff;color:#1a1710;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #C9912A;">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#C9912A;margin-bottom:4px;">✦ Joyería</div>
+        <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:300;color:#1a1710;letter-spacing:3px;line-height:1;">ValGems</div>
+        <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#8A8070;margin-top:4px;">Gestión de orfebrería</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A8070;">Cotización</div>
+        <div style="font-family:'Playfair Display',serif;font-size:28px;color:#C9912A;font-weight:300;margin-top:2px;">#${String(qt.id||'001').padStart(4,'0')}</div>
+        <div style="font-size:11px;color:#7A766A;margin-top:6px;">Fecha: ${fmtDate(qt.date)}</div>
+        <div style="font-size:11px;color:#7A766A;">Válida hasta: ${expStr}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:${qt.photo?'1fr 1.4fr':'1fr'};gap:32px;margin-bottom:32px;">
+      ${qt.photo?`<div><img src="${qt.photo}" style="width:100%;border-radius:10px;border:1px solid rgba(201,145,42,.3);" alt="${qt.piece}"/></div>`:''}
+      <div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A8070;margin-bottom:12px;">Detalle de la pieza</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:300;color:#1a1710;margin-bottom:8px;">${qt.piece}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <tr style="border-bottom:1px solid rgba(201,145,42,.15);"><td style="padding:8px 0;color:#7A766A;width:40%;">Material</td><td style="padding:8px 0;font-weight:500;">${qt.material}</td></tr>
+          ${qt.peso?`<tr style="border-bottom:1px solid rgba(201,145,42,.15);"><td style="padding:8px 0;color:#7A766A;">Peso</td><td style="padding:8px 0;font-weight:500;">${qt.peso} g</td></tr>`:''}
+          <tr><td style="padding:12px 0;color:#7A766A;">Precio de venta</td><td style="padding:12px 0;font-family:'Playfair Display',serif;font-size:28px;font-weight:300;color:#C9912A;">${fmt(qt.price)}</td></tr>
+        </table>
+        ${qt.notes?`<div style="margin-top:16px;padding:14px;background:#FAF7F2;border-radius:8px;border-left:3px solid #C9912A;font-size:12px;color:#3D3A30;line-height:1.7;">${qt.notes}</div>`:''}
+      </div>
+    </div>
+    <div style="background:#FAF7F2;border-radius:10px;padding:24px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;">
+      <div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A8070;margin-bottom:8px;">Cliente</div>
+        <div style="font-size:16px;font-weight:500;color:#1a1710;">${qt.clientName}</div>
+        ${qt.clientPhone?`<div style="font-size:12px;color:#7A766A;margin-top:3px;">${qt.clientPhone}</div>`:''}
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8A8070;margin-bottom:8px;">Total a pagar</div>
+        <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:300;color:#C9912A;">${fmt(qt.price)}</div>
+      </div>
+    </div>
+    <div style="text-align:center;padding-top:24px;border-top:1px solid rgba(201,145,42,.2);">
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#B0AA9E;">ValGems · Joyería artesanal</div>
+      <div style="font-size:10px;color:#B0AA9E;margin-top:4px;">Esta cotización es válida por ${qt.validity} días a partir de la fecha de emisión.</div>
+    </div>
+  </div>`;
+  document.getElementById('modal-quote-preview').classList.add('open');
+}
+function printQuote(){window.print();}
+
+// Enhanced photo drag & drop for catalog modal
+function handlePhotoDrop(e){
+  e.preventDefault();document.getElementById('photo-zone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];if(!file||!file.type.startsWith('image/'))return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    currentPhoto=ev.target.result;
+    const img=document.getElementById('photo-preview-img');
+    img.src=currentPhoto;img.classList.add('visible');
+    document.getElementById('photo-placeholder').classList.add('hidden');
+    document.getElementById('photo-change-lnk').style.display='block';
+    document.getElementById('photo-zone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(){
+  currentPhoto=null;
+  const img=document.getElementById('photo-preview-img');
+  img.src='';img.classList.remove('visible');
+  document.getElementById('photo-placeholder').classList.remove('hidden');
+  document.getElementById('photo-change-lnk').style.display='none';
+  document.getElementById('photo-zone').classList.remove('has-photo');
+  document.getElementById('photo-input').value='';
+}
+
+
+// ── PIN / LOCK ─────────────────────────────────────────────────────────
+function checkPin(val){
+  const storedPin=localStorage.getItem('valgems_pin')||'1234';
+  if(val===storedPin){
+    document.getElementById('lock-screen').style.display='none';
+    document.getElementById('lock-hint').textContent='';
+  } else if(val.length>=4){
+    document.getElementById('lock-error').textContent='PIN incorrecto';
+    setTimeout(()=>{document.getElementById('lock-error').textContent='';document.getElementById('lock-input').value='';},1200);
+  }
+}
+function changePin(){
+  const np=prompt('Nuevo PIN (4-6 dígitos):');
+  if(np&&np.length>=4&&np.length<=6&&/^\d+$/.test(np)){localStorage.setItem('valgems_pin',np);showToast('PIN actualizado');}
+  else if(np)alert('PIN inválido. Usa 4-6 dígitos numéricos.');
+}
+
+// ── REPORTS ────────────────────────────────────────────────────────────
+let chartMonthly=null,chartMaterial=null;
+function renderReports(){
+  // Metrics
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const mSales=db.sales.filter(s=>s.date&&s.date.startsWith(thisMonth));
+  const totalRev=db.sales.reduce((a,s)=>a+s.amount,0);
+  const totalPaid=db.sales.reduce((a,s)=>a+s.paid,0);
+  const avgSale=db.sales.length?totalRev/db.sales.length:0;
+  document.getElementById('rep-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-lbl">Ingresos totales</div><div class="metric-val">${fmt(totalRev)}</div><div class="metric-sub">todas las ventas</div><div class="metric-accent">◈</div></div>
+    <div class="metric-card"><div class="metric-lbl">Cobrado</div><div class="metric-val" style="color:var(--success)">${fmt(totalPaid)}</div><div class="metric-sub up">efectivo recibido</div><div class="metric-accent">✓</div></div>
+    <div class="metric-card"><div class="metric-lbl">Pendiente</div><div class="metric-val" style="color:var(--danger)">${fmt(totalRev-totalPaid)}</div><div class="metric-sub down">por cobrar</div><div class="metric-accent">◆</div></div>
+    <div class="metric-card"><div class="metric-lbl">Ticket promedio</div><div class="metric-val">${fmt(avgSale)}</div><div class="metric-sub">${db.sales.length} ventas</div><div class="metric-accent">◉</div></div>`;
+
+  // Monthly chart
+  const months={};
+  db.sales.forEach(s=>{if(!s.date)return;const m=s.date.slice(0,7);months[m]=(months[m]||0)+s.amount;});
+  const sortedMonths=Object.keys(months).sort().slice(-6);
+  const monthLabels=sortedMonths.map(m=>{const[y,mo]=m.split('-');return new Date(y,mo-1).toLocaleDateString('es-VE',{month:'short'});});
+  const monthVals=sortedMonths.map(m=>months[m]);
+  if(chartMonthly){chartMonthly.destroy();}
+  const ctx1=document.getElementById('chart-monthly').getContext('2d');
+  chartMonthly=new Chart(ctx1,{type:'bar',data:{labels:monthLabels,datasets:[{label:'Ventas',data:monthVals,backgroundColor:'rgba(201,145,42,0.7)',borderColor:'rgba(201,145,42,1)',borderWidth:1,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(201,145,42,0.08)'},ticks:{color:'#8A8070',font:{size:11}}},y:{grid:{color:'rgba(201,145,42,0.08)'},ticks:{color:'#8A8070',font:{size:11},callback:v=>'$'+v}}}}});
+
+  // Material pie chart
+  const matTotals={};
+  db.sales.forEach(s=>{
+    const p=db.pieces.find(x=>x.id===s.pieceId);
+    const mat=p?p.material:s.pieceName;
+    const key=mat.includes('Plata')?'Plata 925':mat.includes('14k')?'Oro 14k':mat.includes('18k')?'Oro 18k':mat.includes('24k')?'Oro 24k':mat.includes('Resina')?'Resina':'Otro';
+    matTotals[key]=(matTotals[key]||0)+s.amount;
+  });
+  const matKeys=Object.keys(matTotals);
+  const matColors=['#C9912A','#E8C36A','#F5DFA0','#5BA87A','#E05252','#8A8070'];
+  if(chartMaterial){chartMaterial.destroy();}
+  const ctx2=document.getElementById('chart-material').getContext('2d');
+  chartMaterial=new Chart(ctx2,{type:'doughnut',data:{labels:matKeys,datasets:[{data:matKeys.map(k=>matTotals[k]),backgroundColor:matColors.slice(0,matKeys.length),borderColor:'rgba(30,28,24,0.8)',borderWidth:2}]},options:{responsive:true,cutout:'65%',plugins:{legend:{display:false}}}});
+
+  // Top clients
+  const clientTotals=db.clients.map(c=>({...c,total:db.sales.filter(s=>s.clientId===c.id).reduce((a,s)=>a+s.amount,0),count:db.sales.filter(s=>s.clientId===c.id).length})).sort((a,b)=>b.total-a.total).slice(0,5);
+  document.getElementById('rep-top-clients').innerHTML=clientTotals.length?clientTotals.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-family:var(--fd);font-size:18px;color:var(--gold);width:24px;text-align:center;">${i+1}</div>
+      <div class="avatar">${initials(c.name)}</div>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--text);">${c.name}</div><div style="font-size:10px;color:var(--text4);">${c.count} compras</div></div>
+      <div style="font-family:var(--fd);font-size:16px;color:var(--gold2);">${fmt(c.total)}</div>
+    </div>`).join(''):`<div class="empty"><div class="empty-text">Sin ventas registradas</div></div>`;
+
+  // Stock alerts
+  const lowStock=db.pieces.filter(p=>p.stock<=1).sort((a,b)=>a.stock-b.stock);
+  document.getElementById('rep-stock-alerts').innerHTML=lowStock.length?lowStock.map(p=>`
+    <div class="stock-alert">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="stock-dot" style="background:${p.stock===0?'var(--danger)':'var(--warn)'}"></div>
+        <div><div style="font-size:13px;color:var(--text);">${p.name}</div><div style="font-size:10px;color:var(--text4);">${p.material}</div></div>
+      </div>
+      <span class="badge ${p.stock===0?'badge-danger':'badge-warn'}">${p.stock===0?'Sin stock':p.stock+' und.'}</span>
+    </div>`).join(''):`<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">Todo el stock está bien</div></div>`;
+}
+
+// ── HISTORY ────────────────────────────────────────────────────────────
+function renderHistory(){
+  const q=(document.getElementById('hist-search')?.value||'').toLowerCase();
+  const clients=db.clients.filter(c=>c.name.toLowerCase().includes(q));
+  const cont=document.getElementById('history-container');
+  if(!clients.length){cont.innerHTML=`<div class="empty"><div class="empty-text">Sin clientes</div></div>`;return;}
+  cont.innerHTML=clients.map(c=>{
+    const sales=db.sales.filter(s=>s.clientId===c.id);
+    const total=sales.reduce((a,s)=>a+s.amount,0);
+    const paid=sales.reduce((a,s)=>a+s.paid,0);
+    const bal=total-paid;
+    const quotes=(db.quotes||[]).filter(q=>q.clientId===c.id);
+    return`<div class="hist-client">
+      <div class="hist-client-header" onclick="toggleHistory(${c.id})">
+        <div class="avatar">${initials(c.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;color:var(--text);font-weight:400;">${c.name}</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px;">${c.phone||'—'} · ${sales.length} compras · ${quotes.length} cotizaciones</div>
+        </div>
+        <div style="text-align:right;margin-right:12px;">
+          <div style="font-family:var(--fd);font-size:18px;color:var(--gold2);">${fmt(total)}</div>
+          ${bal>0?`<div style="font-size:10px;color:var(--danger);">Debe: ${fmt(bal)}</div>`:`<div style="font-size:10px;color:var(--success);">Al día ✓</div>`}
+        </div>
+        <div style="color:var(--text4);font-size:18px;" id="hist-arrow-${c.id}">›</div>
+      </div>
+      <div class="hist-client-body" id="hist-body-${c.id}">
+        <div style="padding:16px 20px;">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text4);margin-bottom:12px;">Compras</div>
+          ${sales.length?sales.map(s=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <div><div style="font-size:13px;color:var(--text);">${s.pieceName}</div><div style="font-size:10px;color:var(--text4);">${fmtDate(s.date)}</div></div>
+              <div style="text-align:right;">
+                <div style="color:var(--gold2);font-weight:500;">${fmt(s.amount)}</div>
+                <span class="badge ${s.status==='pagado'?'badge-success':s.status==='abono'?'badge-warn':'badge-danger'}" style="margin-top:4px;">${s.status==='pagado'?'Pagado':s.status==='abono'?'Abono':'Pendiente'}</span>
+              </div>
+            </div>`).join(''):`<div style="color:var(--text4);font-size:12px;padding:10px 0;">Sin compras registradas</div>`}
+          ${quotes.length?`<div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text4);margin:16px 0 12px;">Cotizaciones</div>`+quotes.map(q=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <div><div style="font-size:13px;color:var(--text);">${q.piece}</div><div style="font-size:10px;color:var(--text4);">${fmtDate(q.date)}</div></div>
+              <div style="text-align:right;"><div style="color:var(--gold2);">${fmt(q.price)}</div><span class="badge badge-warn" style="margin-top:4px;">${q.status}</span></div>
+            </div>`).join(''):''}
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-sm btn-whatsapp" onclick="sendWhatsApp(${c.id})" style="font-size:10px;">📱 WhatsApp</button>
+            <button class="btn btn-sm" onclick="openClientModal(${c.id})" style="font-size:10px;">Editar cliente</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleHistory(id){
+  const body=document.getElementById('hist-body-'+id);
+  const arrow=document.getElementById('hist-arrow-'+id);
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  arrow.style.transform=isOpen?'':'rotate(90deg)';
+}
+
+// ── WHATSAPP ───────────────────────────────────────────────────────────
+function sendWhatsApp(clientId){
+  const client=db.clients.find(c=>c.id===clientId);if(!client||!client.phone)return alert('Este cliente no tiene teléfono registrado.');
+  const bal=db.sales.filter(s=>s.clientId===clientId&&s.status!=='pagado').reduce((a,s)=>a+(s.amount-s.paid),0);
+  const phone=client.phone.replace(/\D/g,'');
+  const msg=bal>0
+    ?`Hola ${client.name}! 💎 Te contactamos de *ValGems* para recordarte que tienes un saldo pendiente de *${fmt(bal)}*. Puedes contactarnos para coordinar el pago. ¡Gracias!`
+    :`Hola ${client.name}! 💎 Gracias por confiar en *ValGems*. Estamos disponibles para cualquier consulta sobre nuestras piezas.`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function sendQuoteWhatsApp(quoteId){
+  const qt=db.quotes.find(q=>q.id===quoteId);if(!qt)return;
+  const client=db.clients.find(c=>c.id===qt.clientId);
+  const phone=client?client.phone.replace(/\D/g,''):'';
+  if(!phone){alert('Este cliente no tiene teléfono registrado.');return;}
+  const msg=`Hola ${qt.clientName}! 💎 Te enviamos la cotización de *${qt.piece}* desde *ValGems*:\n\n• Material: ${qt.material}\n• Precio: *${fmt(qt.price)}*\n• Válida: ${qt.validity} días\n\n${qt.notes?'Notas: '+qt.notes+'\n\n':''}Para confirmar o consultar, no dudes en escribirnos. ¡Gracias!`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ── PWA INSTALL ────────────────────────────────────────────────────────
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('pwa-banner').classList.add('show');
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.addEventListener('click',async()=>{
+    if(!deferredPrompt)return;
+    deferredPrompt.prompt();
+    const{outcome}=await deferredPrompt.userChoice;
+    deferredPrompt=null;
+    document.getElementById('pwa-banner').classList.remove('show');
+  });
+});
+
+// ── CHART.JS CDN LOADER ────────────────────────────────────────────────
+function loadChartJs(cb){
+  if(window.Chart){cb();return;}
+  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+  s.onload=cb;document.head.appendChild(s);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+function renderAll(){renderDashboard();renderCatalog();renderClients();renderSales();if(!db.quotes)db.quotes=[];renderQuotes();renderHistory();renderPricesEdit();calcUpdate();updateActions('dashboard');}
+applyTranslations();
+renderAll();
+// Check if already unlocked this session
+if(sessionStorage.getItem('valgems_unlocked')==='1'){
+  document.getElementById('lock-screen').style.display='none';
+}
+// Update checkPin to set session
+const _origCheckPin=checkPin;
+window.checkPin=function(val){
+  const storedPin=localStorage.getItem('valgems_pin')||'1234';
+  if(val===storedPin){sessionStorage.setItem('valgems_unlocked','1');}
+  _origCheckPin(val);
+};
+</script>
+</body>
+</html>
